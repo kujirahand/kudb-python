@@ -38,7 +38,7 @@ def check_doc(doc):
     res[0] += "\n"
     return "\n".join(res)
 
-text = '# kudb module functions\n\n'
+text = '# kudb functions\n\n'
 for name in dir(kudb):
     if re.match('^__', name):
         # print('skip:', name)

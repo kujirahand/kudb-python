@@ -62,3 +62,8 @@ print(kudb.get_key('hoge_1st', 'not exists'))
 # close
 kudb.close()
 ```
+
+# functions
+
+- [/docs/functions.md](https://github.com/kujirahand/kudb-python/blob/main/docs/functions.md)
+

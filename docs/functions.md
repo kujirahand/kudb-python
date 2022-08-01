@@ -1,4 +1,4 @@
-# kudb module functions
+# kudb functions
 
 ## change_db(filename = ':memory:', table_name = 'kudb')
 
