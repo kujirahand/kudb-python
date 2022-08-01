@@ -1,5 +1,28 @@
 """
 Simple document database Library
+
+For examples:
+>>> _ = connect()
+>>> insert(100) # insert value
+1
+>>> get_by_id(1) # get value
+100
+
+Insert document data:
+>>> clear()
+>>> insert({"name": "Jiro", "age": 18})
+1
+>>> get_by_id(1)["name"]
+'Jiro'
+
+Insert and find:
+>>> clear()
+>>> insert({"name": "Jiro", "age": 18})
+1
+>>> insert({"name": "Sabu", "age": 21})
+2
+>>> find(lambda v: v["age"] >= 20)[0]["name"]
+'Sabu'
 """
 # pylint: disable=C0103,W0622,W0603
 import sqlite3
@@ -10,7 +33,8 @@ db = None
 cache_db = {}
 CACHE_KEYS = {}
 sqls = {}
-cur_filename = ':memory:'
+MEMORY_FILE = ':memory:'
+cur_filename = MEMORY_FILE
 # SQL template
 SQLS_TEMPLATE = {
     # kvs
@@ -53,8 +77,8 @@ def connect(filename = ':memory:', table_name='kudb'):
     global sqls, cur_filename
     # generate sqls
     sqls = {}
-    for key in SQLS_TEMPLATE.keys():
-        sqls[key] = SQLS_TEMPLATE[key].replace('__TABLE_NAME__', table_name)
+    for key, val in SQLS_TEMPLATE.items():
+        sqls[key] = val.replace('__TABLE_NAME__', table_name)
     # connect to sqlite3
     global db
     if filename in cache_db: # already open?
@@ -89,8 +113,27 @@ def close():
     db = None
     cur_filename = ''
 
-def get_key(key, default = ''):
-    """get data by key"""
+def get_key(key, default = '', file=None):
+    """
+    get data by key
+
+    >>> _ = connect()
+    >>> set_key('Jiro', 30)
+    >>> get_key('Jiro')
+    30
+    >>> set_key('Jiro', 31)
+    >>> get_key('Jiro')
+    31
+    >>> set_key('Sabu', 18)
+    >>> get_key('hoge', 'ne')
+    'ne'
+    >>> close()
+    >>> set_key('fuga', 123, file=MEMORY_FILE)
+    >>> get_key('fuga', file=MEMORY_FILE)
+    123
+    """
+    if file is not None:
+        connect(file)
     if db is None:
         raise Exception('please connect before using `get` method.')
     if key not in CACHE_KEYS:
@@ -121,8 +164,18 @@ def get_info(key, default = ''):
     finally:
         cur.close()
 
-def set_key(key, value):
-    """set data by key"""
+def set_key(key, value, file=None):
+    """
+    set data by key
+    >>> set_key('hoge', 30, file=':memory:')
+    >>> get_key('hoge')
+    30
+    >>> set_key(1, 40)
+    >>> get_key(1)
+    40
+    """
+    if file is not None:
+        connect(file)
     if db is None:
         raise Exception('please connect before using `set_key` method.')
     try:
@@ -160,7 +213,15 @@ def delete_key(key):
         cur.close()
 
 def get_keys(clear_cache = True):
-    """get keys"""
+    """
+    get keys
+    >>> _ = connect()
+    >>> clear()
+    >>> set_key('Ako', 19)
+    >>> set_key('Iko', 20)
+    >>> sorted(list(get_keys()))
+    ['Ako', 'Iko']
+    """
     global CACHE_KEYS
     if db is None:
         return []
@@ -195,20 +256,37 @@ def clear_keys():
         cur.close()
 
 def get_all():
-    """get all doc"""
+    """
+    get all document's data
+    >>> _ = connect()
+    >>> clear()
+    >>> insert({'name': 'A'})
+    1
+    >>> insert({'name': 'B'})
+    2
+    >>> [a['name'] for a in get_all()]
+    ['A', 'B']
+    """
     if db is None:
         raise Exception('please connect before using `all` method.')
     result = []
     cur = db.cursor()
     for row in cur.execute(sqls['select_doc']):
         values = json.loads(row[0])
-        values['id'] = row[1]
+        if isinstance(values, dict):
+            values['id'] = row[1]
         result.append(values)
     cur.close()
     return result
 
 def recent(limit):
-    """get recent docs"""
+    """
+    get recent docs
+    >>> clear(file=MEMORY_FILE)
+    >>> insert_many( [{'name': 'A'}, {'name': 'B'}, {'name': 'C'}] )
+    >>> [a['name'] for a in recent(2)]
+    ['C', 'B']
+    """
     if db is None:
         raise Exception('please connect before using `recent` method.')
     cur = db.cursor()
@@ -220,23 +298,40 @@ def recent(limit):
     cur.close()
     return result
 
-def get_by_id(id):
-    """get doc by id"""
+def get_by_id(id, def_value=None, file=None):
+    """
+    get doc by id
+    >>> clear(file=MEMORY_FILE)
+    >>> insert_many( [{'name': 'A'}, {'name': 'B'}, {'name': 'C'}] )
+    >>> get_by_id(1)['name']
+    'A'
+    >>> get_by_id(5, 'ne')
+    'ne'
+    """
+    if file is not None:
+        connect(file)
     if db is None:
         raise Exception('please connect before using `get` method.')
     cur = db.cursor()
     cur.execute(sqls['get_doc_by_id'], [id])
     data_one = cur.fetchone()
     if data_one is None:
-        return None
+        return def_value
     values, id = data_one
     values = json.loads(values)
-    values['id'] = id
+    if isinstance(values, dict):
+        values['id'] = id
     cur.close()
     return values
 
 def get(id=None, key=None, file=None):
-    """get doc by id or key"""
+    """
+    get doc by id or key
+    >>> clear(file=MEMORY_FILE)
+    >>> insert_many([{'name': 'A'},{'name': 'B'},{'name': 'C'}])
+    >>> get(id=1)['name']
+    'A'
+    """
     if file is not None:
         connect(file)
     if db is None:
@@ -247,8 +342,19 @@ def get(id=None, key=None, file=None):
         return get_key(key, None)
     raise Exception('need id or key in `get` method')
 
-def insert(values):
-    """insert doc"""
+def insert(values, file=None):
+    """
+    insert doc
+    >>> clear(file=MEMORY_FILE)
+    >>> insert({'name':'A'})
+    1
+    >>> insert({'name':'B'})
+    2
+    >>> [a['name'] for a in get_all()]
+    ['A', 'B']
+    """
+    if file is not None:
+        connect(file)
     if db is None:
         raise Exception('please connect before using `insert` method.')
     cur = db.cursor()
@@ -256,19 +362,59 @@ def insert(values):
     cur.close()
     return cur.lastrowid
 
+def insert_many(value_list, file=None):
+    """
+    insert many doc
+    >>> clear(file=MEMORY_FILE)
+    >>> insert_many([1,2,3,4,5])
+    >>> get_by_id(1)
+    1
+    >>> get_by_id(2)
+    2
+    """
+    if file is not None:
+        connect(file)
+    if db is None:
+        raise Exception('please connect before using `insert` method.')
+    for row in value_list:
+        insert(row)
+
 def update(doc_id, values):
-    """update doc"""
+    """
+    update doc
+    >>> clear(file=MEMORY_FILE)
+    >>> insert_many([1,2,3,4,5])
+    >>> get_by_id(1)
+    1
+    >>> update(1, 100)
+    >>> get_by_id(1)
+    100
+    """
     if db is None:
         raise Exception('please connect before using `update_doc` method.')
     cur = db.cursor()
     cur.execute(sqls['update_doc'], [json.dumps(values), int(time.time()), doc_id])
     cur.close()
-    return doc_id
 
-def delete(id=None, key=None):
-    """delete by id or key"""
+def delete(id=None, key=None, file=None):
+    """
+    delete by id or key
+    >>> clear(file=MEMORY_FILE)
+    >>> insert_many([1,2,3])
+    >>> delete(id=3)
+    >>> [a for a in get_all()]
+    [1, 2]
+    >>> clear()
+    >>> set_key('Taro', 30)
+    >>> set_key('Jiro', 18)
+    >>> delete(key='Taro')
+    >>> list(get_keys())
+    ['Jiro']
+    """
+    if file is not None:
+        connect(file)
     if db is None:
-        raise Exception('please connect before using `delete_doc` method.')
+        raise Exception('please connect before using `delete` method.')
     if id is not None:
         cur = db.cursor()
         cur.execute(sqls['delete_doc'], [id])
@@ -279,30 +425,46 @@ def delete(id=None, key=None):
         return
     raise Exception('should set id or key in `delete` method')
 
-def clear_doc():
+def clear_doc(file=None):
     """clear all"""
+    if file is not None:
+        connect(file)
     if db is None:
         raise Exception('please connect before using `clear_doc` method.')
     cur = db.cursor()
     cur.execute(sqls['clear_doc'], [])
     cur.close()
 
-def clear():
+def clear(file=None):
     """clear all"""
+    if file is not None:
+        connect(file)
     clear_keys()
     clear_doc()
 
 def find(callback):
-    """find doc by lambda"""
+    """
+    find doc by lambda
+    >>> clear(file=MEMORY_FILE)
+    >>> insert_many([{"name": "Taro", "age":30},{"name": "Bob", "age":19},{"name": "Coo", "age": 21}])
+    >>> [a['name'] for a in find(lambda v: v['age'] == 19)]
+    ['Bob']
+    >>> [a['name'] for a in find(lambda v: v['age'] < 22)]
+    ['Bob', 'Coo']
+    """
     if db is None:
         raise Exception('please connect before using `find` method.')
     result = []
     cur = db.cursor()
     for row in cur.execute(sqls['select_doc']):
         values = json.loads(row[0])
-        values['id'] = row[1]
+        if isinstance(values, dict):
+            values['id'] = row[1]
         if callback(values):
             result.append(values)
     cur.close()
     return result
-# end of kudb
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

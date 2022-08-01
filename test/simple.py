@@ -51,3 +51,9 @@ age_total = 0
 for c in kudb.get_all():
     age_total += c['age']
 assert 37 == age_total, 'insert error'
+kudb.close()
+
+# test
+kudb.connect()
+kudb.insert(100)
+assert 100 == kudb.get_by_id(1), 'insert value 100'
