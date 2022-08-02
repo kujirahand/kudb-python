@@ -8,13 +8,35 @@ Change Database
 
 ## clear(file=None)
 
-clear all
+clear doc and key-value-store
+
+
+```
+>>> clear(file=MEMORY_FILE)
+>>> insert_many([1,2,3,4,5])
+>>> count_doc()
+5
+>>> clear_doc()
+>>> count_doc()
+0
+```
 
 
 
 ## clear_doc(file=None)
 
-clear all
+clear all doc
+
+
+```
+>>> clear(file=MEMORY_FILE)
+>>> insert_many([1,2,3,4,5])
+>>> count_doc()
+5
+>>> clear_doc()
+>>> count_doc()
+0
+```
 
 
 
@@ -62,7 +84,7 @@ delete key
 
 
 
-## find(callback)
+## find(callback, limit=None)
 
 find doc by lambda
 
@@ -73,6 +95,10 @@ find doc by lambda
 ['Bob']
 >>> [a['name'] for a in find(lambda v: v['age'] < 22)]
 ['Bob', 'Coo']
+>>> clear()
+>>> insert_many([1,2,3,4,5])
+>>> [v for v in find(lambda c: c>=2, limit=3)]
+[2, 3, 4]
 ```
 
 
@@ -90,19 +116,23 @@ get doc by id or key
 
 
 
-## get_all()
+## get_all(limit=None, order_asc=True, from_id=None, file=None)
 
-get all document's data
+get all doc
 
 ```
->>> _ = connect()
->>> clear()
->>> insert({'name': 'A'})
-1
->>> insert({'name': 'B'})
-2
+>>> clear(file=MEMORY_FILE)
+>>> insert_many([{'name':'A'},{'name':'B'},{'name':'C'},{'name':'D'}])
 >>> [a['name'] for a in get_all()]
+['A', 'B', 'C', 'D']
+>>> [a['name'] for a in get_all(limit=2)]
 ['A', 'B']
+>>> [a['name'] for a in get_all(limit=2,from_id=3)]
+['C', 'D']
+>>> [a['name'] for a in get_all(order_asc=False)]
+['D', 'C', 'B', 'A']
+>>> [a['name'] for a in get_all(limit=2,order_asc=False)]
+['D', 'C']
 ```
 
 
@@ -183,13 +213,28 @@ insert doc
 
 
 
+## insert_many(value_list, file=None)
+
+insert many doc
+
+```
+>>> clear(file=MEMORY_FILE)
+>>> insert_many([1,2,3,4,5])
+>>> get_by_id(1)
+1
+>>> get_by_id(2)
+2
+```
+
+
+
 ## kvs_json()
 
 dump key-value items to json
 
 
 
-## recent(limit)
+## recent(limit=100, offset=0)
 
 get recent docs
 
@@ -198,6 +243,12 @@ get recent docs
 >>> insert_many( [{'name': 'A'}, {'name': 'B'}, {'name': 'C'}] )
 >>> [a['name'] for a in recent(2)]
 ['C', 'B']
+>>> clear(file=MEMORY_FILE)
+>>> insert_many( [1,2,3,4,5] )
+>>> [v for v in recent(3)]
+[5, 4, 3]
+>>> [v for v in recent(limit=3, offset=3)]
+[2, 1]
 ```
 
 

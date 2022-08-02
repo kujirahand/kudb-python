@@ -3,6 +3,7 @@ rm -f -r dist
 rm -f -r build
 rm -f -r kudb.egg-info
 
+python3 mkdoc.py
 python3 setup.py sdist
 python3 setup.py bdist_wheel
 
