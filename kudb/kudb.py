@@ -194,10 +194,10 @@ def set_key(key, value, file=None):
                 ]
             )
             CACHE_KEYS[key] = True
-    except Exception as err:
-        raise Exception('could not read database: ' + str(err)) from err
-    finally:
         cur.close()
+        db.commit()
+    except Exception as err:
+        raise Exception('database could not write key: ' + str(err)) from err
 
 def delete_key(key):
     """delete key"""
@@ -208,11 +208,10 @@ def delete_key(key):
         if key in CACHE_KEYS:
             cur.execute(SQLS['delete'], [key])
             del CACHE_KEYS[key]
-    except Exception as err:
-        raise Exception('could not read database: ' + str(err)) from err
-    finally:
         cur.close()
         db.commit()
+    except Exception as err:
+        raise Exception('database could not delete key: ' + str(err)) from err
 
 def get_keys(clear_cache = True):
     """
