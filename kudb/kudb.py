@@ -78,31 +78,28 @@ SQLS_TEMPLATE = {
 
 def connect(filename = ':memory:', table_name='kudb'):
     """Connect to database"""
-    global SQLS, cur_filename
+    global SQLS, cur_filename, db
     # generate sqls
     SQLS = {}
     for key, val in SQLS_TEMPLATE.items():
         SQLS[key] = val.replace('__TABLE_NAME__', table_name)
-    # connect to sqlite3
-    global db
+    # check cache
     if filename in cache_db: # already open?
         db = cache_db[filename] # use_cache
-    else:
-        db = sqlite3.connect(filename)
-        cache_db[filename] = db
+        cur_filename = filename
+        return db
+    # connect to sqlite3
+    db = sqlite3.connect(filename, check_same_thread=False)
+    cache_db[filename] = db
     cur_filename = filename
     try:
         # create table
-        cur = db.cursor()
-        cur.execute(SQLS['create'], [])
-        cur.execute(SQLS['create_doc'], [])
+        db.executescript(SQLS['create'] + ';' + SQLS['create_doc'])
         # make cache keys
         get_keys(True)
+        return db
     except Exception as err:
         raise Exception('could not initalize database file: ' + str(err)) from err
-    finally:
-        cur.close()
-    return db
 
 def change_db(filename = ':memory:', table_name = 'kudb'):
     """Change Database"""
@@ -112,8 +109,8 @@ def close():
     """close database"""
     global db, cur_filename
     if db is not None:
-        del cache_db[cur_filename]
         db.close()
+        del cache_db[cur_filename]
     db = None
     cur_filename = ''
 
@@ -142,8 +139,8 @@ def get_key(key, default = '', file=None):
         raise Exception('please connect before using `get` method.')
     if key not in CACHE_KEYS:
         return default
+    cur = db.cursor()
     try:
-        cur = db.cursor()
         cur.execute(SQLS['select'], [key])
         values = cur.fetchone()
         return json.loads(values[0])
@@ -215,6 +212,7 @@ def delete_key(key):
         raise Exception('could not read database: ' + str(err)) from err
     finally:
         cur.close()
+        db.commit()
 
 def get_keys(clear_cache = True):
     """
@@ -254,10 +252,10 @@ def clear_keys():
         cur = db.cursor()
         cur.execute(SQLS['clear'])
         CACHE_KEYS = {}
+        cur.close()
+        db.commit()
     except Exception as err:
         raise Exception('could not read database: ' + str(err)) from err
-    finally:
-        cur.close()
 
 def count_doc(file=None):
     """
@@ -407,10 +405,16 @@ def insert(values, file=None):
         connect(file)
     if db is None:
         raise Exception('please connect before using `insert` method.')
-    cur = db.cursor()
-    cur.execute(SQLS['insert_doc'], [json.dumps(values), int(time.time()), int(time.time())])
-    cur.close()
-    return cur.lastrowid
+    try:
+        lastid = None
+        cur = db.cursor()
+        cur.execute(SQLS['insert_doc'], [json.dumps(values), int(time.time()), int(time.time())])
+        lastid = cur.lastrowid
+        cur.close()
+        db.commit()
+        return lastid
+    except Exception as err:
+        raise Exception('database insert error:' + str(err)) from err
 
 def insert_many(value_list, file=None):
     """
@@ -428,8 +432,19 @@ def insert_many(value_list, file=None):
         raise Exception('please connect before using `insert_many` method.')
     if not isinstance(value_list, list):
         raise Exception('please set the list type arguments to `insert_many` method.')
-    for row in value_list:
-        insert(row)
+    # make many values
+    t = int(time.time())
+    rows = []
+    for val in value_list:
+        rows.append([json.dumps(val), t, t])
+    # insert
+    try:
+        cur = db.cursor()
+        cur.executemany(SQLS['insert_doc'], rows)
+        cur.close()
+        db.commit()
+    except Exception as err:
+        raise Exception('database insert error:' + str(err)) from err
 
 def update(doc_id, values):
     """
@@ -444,9 +459,13 @@ def update(doc_id, values):
     """
     if db is None:
         raise Exception('please connect before using `update_doc` method.')
-    cur = db.cursor()
-    cur.execute(SQLS['update_doc'], [json.dumps(values), int(time.time()), doc_id])
-    cur.close()
+    try:
+        cur = db.cursor()
+        cur.execute(SQLS['update_doc'], [json.dumps(values), int(time.time()), doc_id])
+        cur.close()
+        db.commit()
+    except Exception as err:
+        raise Exception('database update error:' + str(err)) from err
 
 def delete(id=None, key=None, file=None):
     """
@@ -471,6 +490,7 @@ def delete(id=None, key=None, file=None):
         cur = db.cursor()
         cur.execute(SQLS['delete_doc'], [id])
         cur.close()
+        db.commit()
         return
     if key is not None:
         delete_key(key)
@@ -496,6 +516,7 @@ def clear_doc(file=None):
     cur = db.cursor()
     cur.execute(SQLS['clear_doc'], [])
     cur.close()
+    db.commit()
 
 def clear(file=None):
     """
