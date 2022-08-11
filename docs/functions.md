@@ -58,7 +58,7 @@ Connect to database
 
 
 
-## delete(id=None, key=None, file=None)
+## delete(id=None, key=None, tag=None, file=None)
 
 delete by id or key
 
@@ -84,7 +84,7 @@ delete key
 
 
 
-## find(callback, limit=None)
+## find(callback=None, keys=None, limit=None)
 
 find doc by lambda
 
@@ -99,19 +99,27 @@ find doc by lambda
 >>> insert_many([1,2,3,4,5])
 >>> [v for v in find(lambda c: c>=2, limit=3)]
 [2, 3, 4]
+>>> clear(file=MEMORY_FILE)
+>>> insert_many([{"name": "Taro", "age":30},{"name": "Bob", "age":19},{"name": "Coo", "age": 21}])
+>>> find(keys={"name": "Taro"})[0]["age"]
+30
+>>> find(keys={"age": 30})[0]["name"]
+'Taro'
 ```
 
 
 
-## get(id=None, key=None, file=None)
+## get(id=None, key=None, tag=None, file=None)
 
 get doc by id or key
 
 ```
 >>> clear(file=MEMORY_FILE)
->>> insert_many([{'name': 'A'},{'name': 'B'},{'name': 'C'}])
+>>> insert_many([{'name': 'A'},{'name': 'B'},{'name': 'C'}], tag='name')
 >>> get(id=1)['name']
 'A'
+>>> get(tag='C')[0]['name']
+'C'
 ```
 
 
@@ -197,7 +205,7 @@ get keys
 
 
 
-## insert(values, file=None)
+## insert(values, file=None, tag=None)
 
 insert doc
 
@@ -209,11 +217,16 @@ insert doc
 2
 >>> [a['name'] for a in get_all()]
 ['A', 'B']
+>>> clear()
+>>> insert({'name':'banana', 'price': 30})
+1
+>>> get_key("_tag")
+'name'
 ```
 
 
 
-## insert_many(value_list, file=None)
+## insert_many(value_list, file=None, tag=None)
 
 insert many doc
 
