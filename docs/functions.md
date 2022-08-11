@@ -234,7 +234,7 @@ dump key-value items to json
 
 
 
-## recent(limit=100, offset=0)
+## recent(limit=100, offset=0, order_asc=True)
 
 get recent docs
 
@@ -242,13 +242,15 @@ get recent docs
 >>> clear(file=MEMORY_FILE)
 >>> insert_many( [{'name': 'A'}, {'name': 'B'}, {'name': 'C'}] )
 >>> [a['name'] for a in recent(2)]
-['C', 'B']
+['A', 'B']
 >>> clear(file=MEMORY_FILE)
 >>> insert_many( [1,2,3,4,5] )
 >>> [v for v in recent(3)]
-[5, 4, 3]
+[1, 2, 3]
 >>> [v for v in recent(limit=3, offset=3)]
-[2, 1]
+[4, 5]
+>>> [v for v in recent(limit=3, order_asc=False)]
+[5, 4, 3]
 ```
 
 
