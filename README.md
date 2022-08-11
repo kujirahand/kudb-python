@@ -18,32 +18,51 @@ $ python3 -m pip install kudb
 - [(GitHub) github.com/kujirahand/kudb-python](https://github.com/kujirahand/kudb-python)
 - [(PyPI) pypi.org/project/kudb/](https://pypi.org/project/kudb/)
 
-## Simple sample
+## Sample for document database
 
 document database sample:
 
 ```simple-doc.py
-import kudb
+import kudb, json
 
 # connect to file database
 kudb.connect('test.db')
 
 # insert
-kudb.insert({'name': 'Tako', 'age': 18})
+kudb.insert({'name': 'Tako', 'age': 18}, tag='name')
 kudb.insert({'name': 'Ika', 'age': 19})
+kudb.insert({'name': 'Poko', 'age': 12})
+kudb.insert({'name': 'Foo', 'age': 13})
+
+# insert_many
+kudb.insert_many([{"name": "A", "age": 10},{"name": "B", "age": 11},{"name": "C", "age": 12}], tag='name')
 
 # get data
 for row in kudb.get_all():
-    print(row)
+    print(row) # all
+
+# get recent
+for row in kudb.recent(2):
+    print(row) # => B and C
 
 # get data by id
-print(kudb.get(id=1)) # show 1st row
+print(kudb.get(id=1)) # => Tako
+
+# find by lambda
+print(json.dumps(kudb.find(lambda v: v['name']=='Ika'))) # => Ika
+
+# find by keys
+print(json.dumps(kudb.find(keys={"name": "Ika"}))) # => Ika
+print(json.dumps(kudb.find(keys={"age": 19}))) # => Ika
+
+# get by tag
+print(kudb.get(tag="Ika")[0]) # => Ika
 
 # close
 kudb.close()
 ```
 
-key-value store sample:
+### Sample for key-value-store
 
 ```simple-kvs.py
 import kudb
