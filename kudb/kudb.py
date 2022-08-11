@@ -59,6 +59,7 @@ SQLS_TEMPLATE = {
     'create_doc': '''
     CREATE TABLE IF NOT EXISTS doc__TABLE_NAME__ (
         id INTEGER PRIMARY KEY,
+        tag TEXT DEFAULT '',
         value TEXT DEFAULT '',
         ctime INTEGER DEFAULT 0,
         mtime INTEGER DEFAULT 0
@@ -69,9 +70,11 @@ SQLS_TEMPLATE = {
     'select_doc_asc': 'SELECT value, id FROM doc__TABLE_NAME__ WHERE id >= ? ORDER BY id ASC LIMIT ?',
     'recent_doc': 'SELECT value, id FROM doc__TABLE_NAME__ ORDER BY id DESC LIMIT ? OFFSET ?',
     'get_doc_by_id': 'SELECT value, id FROM doc__TABLE_NAME__ WHERE id=?',
-    'insert_doc': 'INSERT INTO doc__TABLE_NAME__ (value, ctime, mtime) VALUES (?, ?, ?)',
+    'get_doc_by_tag': 'SELECT value, id FROM doc__TABLE_NAME__ WHERE tag=? LIMIT ?',
+    'insert_doc': 'INSERT INTO doc__TABLE_NAME__ (value, tag, ctime, mtime) VALUES (?, ?, ?, ?)',
     'update_doc': 'UPDATE doc__TABLE_NAME__ SET value=?, mtime=? WHERE id=?',
     'delete_doc': 'DELETE FROM doc__TABLE_NAME__ WHERE id=?',
+    'delete_doc_by_tag': 'DELETE FROM doc__TABLE_NAME__ WHERE tag=?',
     'clear_doc': 'DELETE FROM doc__TABLE_NAME__',
     'count_doc': 'SELECT count(id) FROM doc__TABLE_NAME__',
 }
@@ -375,13 +378,40 @@ def get_by_id(id, def_value=None, file=None):
     cur.close()
     return values
 
-def get(id=None, key=None, file=None):
+def get_by_tag(tag, limit=None, file=None):
+    """
+    get doc by tag
+    >>> clear(file=MEMORY_FILE)
+    >>> insert_many( [{'name': 'A'}, {'name': 'B'}, {'name': 'C'}], tag='name' )
+    >>> get_by_tag('B')[0]['name']
+    'B'
+    """
+    if file is not None:
+        connect(file)
+    if db is None:
+        raise Exception('please connect before using `get` method.')
+    if limit is None:
+        limit = count_doc()
+    result = []
+    cur = db.cursor()
+    for values, id in cur.execute(SQLS['get_doc_by_tag'], [tag, limit]):
+        values = json.loads(values)
+        if isinstance(values, dict):
+            values['id'] = id
+        result.append(values)
+    cur.close()
+    return result
+
+
+def get(id=None, key=None, tag=None, file=None):
     """
     get doc by id or key
     >>> clear(file=MEMORY_FILE)
-    >>> insert_many([{'name': 'A'},{'name': 'B'},{'name': 'C'}])
+    >>> insert_many([{'name': 'A'},{'name': 'B'},{'name': 'C'}], tag='name')
     >>> get(id=1)['name']
     'A'
+    >>> get(tag='C')[0]['name']
+    'C'
     """
     if file is not None:
         connect(file)
@@ -389,11 +419,13 @@ def get(id=None, key=None, file=None):
         raise Exception('please connect before using `get` method.')
     if id is not None:
         return get_by_id(id)
+    if tag is not None:
+        return get_by_tag(tag)
     if key is not None:
         return get_key(key, None)
     raise Exception('need id or key in `get` method')
 
-def insert(values, file=None):
+def insert(values, file=None, tag=None):
     """
     insert doc
     >>> clear(file=MEMORY_FILE)
@@ -403,6 +435,11 @@ def insert(values, file=None):
     2
     >>> [a['name'] for a in get_all()]
     ['A', 'B']
+    >>> clear()
+    >>> insert({'name':'banana', 'price': 30})
+    1
+    >>> get_key("_tag")
+    'name'
     """
     if file is not None:
         connect(file)
@@ -411,7 +448,23 @@ def insert(values, file=None):
     try:
         lastid = None
         cur = db.cursor()
-        cur.execute(SQLS['insert_doc'], [json.dumps(values), int(time.time()), int(time.time())])
+        if tag is None:
+            tag = get_key('_tag', None)
+            if tag is None:
+                if isinstance(values, dict):
+                    tag = list(values.keys())[0]
+                    set_key('_tag', tag)
+        tag_value = ''
+        if tag is not None:
+            tag_value = str(values[tag])
+        cur.execute(
+            SQLS['insert_doc'],
+            [
+                json.dumps(values, ensure_ascii=False),
+                tag_value,
+                int(time.time()),
+                int(time.time())
+            ])
         lastid = cur.lastrowid
         cur.close()
         db.commit()
@@ -419,7 +472,7 @@ def insert(values, file=None):
     except Exception as err:
         raise Exception('database insert error:' + str(err)) from err
 
-def insert_many(value_list, file=None):
+def insert_many(value_list, file=None, tag=None):
     """
     insert many doc
     >>> clear(file=MEMORY_FILE)
@@ -437,9 +490,16 @@ def insert_many(value_list, file=None):
         raise Exception('please set the list type arguments to `insert_many` method.')
     # make many values
     t = int(time.time())
+    # check tag
+    if tag is None:
+        tag = get_key('_tag', 'tag')
     rows = []
     for val in value_list:
-        rows.append([json.dumps(val), t, t])
+        tag_value = ''
+        if isinstance(val, dict):
+            if tag in val:
+                tag_value = val[tag]
+        rows.append([json.dumps(val), tag_value, t, t])
     # insert
     try:
         cur = db.cursor()
@@ -470,7 +530,7 @@ def update(doc_id, values):
     except Exception as err:
         raise Exception('database update error:' + str(err)) from err
 
-def delete(id=None, key=None, file=None):
+def delete(id=None, key=None, tag=None, file=None):
     """
     delete by id or key
     >>> clear(file=MEMORY_FILE)
@@ -492,6 +552,12 @@ def delete(id=None, key=None, file=None):
     if id is not None:
         cur = db.cursor()
         cur.execute(SQLS['delete_doc'], [id])
+        cur.close()
+        db.commit()
+        return
+    if tag is not None:
+        cur = db.cursor()
+        cur.execute(SQLS['delete_doc_by_tag'], [tag])
         cur.close()
         db.commit()
         return
@@ -538,7 +604,7 @@ def clear(file=None):
     clear_keys()
     clear_doc()
 
-def find(callback, limit=None):
+def find(callback=None, keys=None, limit=None):
     """
     find doc by lambda
     >>> clear(file=MEMORY_FILE)
@@ -551,11 +617,21 @@ def find(callback, limit=None):
     >>> insert_many([1,2,3,4,5])
     >>> [v for v in find(lambda c: c>=2, limit=3)]
     [2, 3, 4]
+    >>> clear(file=MEMORY_FILE)
+    >>> insert_many([{"name": "Taro", "age":30},{"name": "Bob", "age":19},{"name": "Coo", "age": 21}])
+    >>> find(keys={"name": "Taro"})[0]["age"]
+    30
+    >>> find(keys={"age": 30})[0]["name"]
+    'Taro'
     """
     if db is None:
         raise Exception('please connect before using `find` method.')
     result = []
     cur = db.cursor()
+    # callback
+    if (callback is None) and (keys is not None):
+        callback = lambda values : True if sum([(0 if (values[k] == v) else 1) for k, v in keys.items()]) == 0 else False
+    # find
     for row in cur.execute(SQLS['select_doc']):
         values = json.loads(row[0])
         if isinstance(values, dict):
