@@ -20,7 +20,8 @@ print('id=1', kudb.get(id=1))
 
 print("===")
 print(json.dumps(kudb.find(lambda v: v['name']=='Ika')))
-
+print(json.dumps(kudb.find(keys={"name": "Ika"})))
+print(json.dumps(kudb.find(keys={"age": 11})))
 print("===")
 kudb.clear()
 a = kudb.get_all()

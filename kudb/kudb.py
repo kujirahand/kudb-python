@@ -35,6 +35,7 @@ CACHE_KEYS = {}
 SQLS = {}
 MEMORY_FILE = ':memory:'
 cur_filename = MEMORY_FILE
+cur_tablename = 'kudb'
 SQLITE_MAX_INT=9223372036854775807
 # SQL template
 SQLS_TEMPLATE = {
@@ -81,13 +82,13 @@ SQLS_TEMPLATE = {
 
 def connect(filename = ':memory:', table_name='kudb'):
     """Connect to database"""
-    global SQLS, cur_filename, db
+    global SQLS, cur_filename, db, cur_tablename
     # generate sqls
     SQLS = {}
     for key, val in SQLS_TEMPLATE.items():
         SQLS[key] = val.replace('__TABLE_NAME__', table_name)
     # check cache
-    if filename in cache_db: # already open?
+    if (filename in cache_db) and (cur_tablename == table_name): # already open?
         db = cache_db[filename] # use_cache
         cur_filename = filename
         return db
@@ -95,6 +96,7 @@ def connect(filename = ':memory:', table_name='kudb'):
     db = sqlite3.connect(filename, check_same_thread=False)
     cache_db[filename] = db
     cur_filename = filename
+    cur_tablename = table_name
     try:
         # create table
         db.executescript(SQLS['create'] + ';' + SQLS['create_doc'])

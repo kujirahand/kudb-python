@@ -160,6 +160,19 @@ get doc by id
 
 
 
+## get_by_tag(tag, limit=None, file=None)
+
+get doc by tag
+
+```
+>>> clear(file=MEMORY_FILE)
+>>> insert_many( [{'name': 'A'}, {'name': 'B'}, {'name': 'C'}], tag='name' )
+>>> get_by_tag('B')[0]['name']
+'B'
+```
+
+
+
 ## get_info(key, default = '')
 
 get data and info
