@@ -242,13 +242,13 @@ get recent docs
 >>> clear(file=MEMORY_FILE)
 >>> insert_many( [{'name': 'A'}, {'name': 'B'}, {'name': 'C'}] )
 >>> [a['name'] for a in recent(2)]
-['A', 'B']
+['B', 'C']
 >>> clear(file=MEMORY_FILE)
 >>> insert_many( [1,2,3,4,5] )
 >>> [v for v in recent(3)]
-[1, 2, 3]
+[3, 4, 5]
 >>> [v for v in recent(limit=3, offset=3)]
-[4, 5]
+[1, 2]
 >>> [v for v in recent(limit=3, order_asc=False)]
 [5, 4, 3]
 ```
