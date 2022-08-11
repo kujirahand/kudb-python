@@ -67,7 +67,8 @@ SQLS_TEMPLATE = {
     'select_doc': 'SELECT value, id FROM doc__TABLE_NAME__',
     'select_doc_desc': 'SELECT value, id FROM doc__TABLE_NAME__ WHERE id <= ? ORDER BY id DESC LIMIT ?',
     'select_doc_asc': 'SELECT value, id FROM doc__TABLE_NAME__ WHERE id >= ? ORDER BY id ASC LIMIT ?',
-    'recent_doc': 'SELECT value, id FROM doc__TABLE_NAME__ ORDER BY id DESC LIMIT ? OFFSET ?',
+    'recent_doc_desc': 'SELECT value, id FROM doc__TABLE_NAME__ ORDER BY id DESC LIMIT ? OFFSET ?',
+    'recent_doc_asc': 'SELECT value, id FROM doc__TABLE_NAME__ ORDER BY id ASC LIMIT ? OFFSET ?',
     'get_doc_by_id': 'SELECT value, id FROM doc__TABLE_NAME__ WHERE id=?',
     'insert_doc': 'INSERT INTO doc__TABLE_NAME__ (value, ctime, mtime) VALUES (?, ?, ?)',
     'update_doc': 'UPDATE doc__TABLE_NAME__ SET value=?, mtime=? WHERE id=?',
@@ -319,25 +320,28 @@ def get_all(limit=None, order_asc=True, from_id=None, file=None):
     cur.close()
     return result
 
-def recent(limit=100, offset=0):
+def recent(limit=100, offset=0, order_asc=True):
     """
     get recent docs
     >>> clear(file=MEMORY_FILE)
     >>> insert_many( [{'name': 'A'}, {'name': 'B'}, {'name': 'C'}] )
     >>> [a['name'] for a in recent(2)]
-    ['C', 'B']
+    ['A', 'B']
     >>> clear(file=MEMORY_FILE)
     >>> insert_many( [1,2,3,4,5] )
     >>> [v for v in recent(3)]
-    [5, 4, 3]
+    [1, 2, 3]
     >>> [v for v in recent(limit=3, offset=3)]
-    [2, 1]
+    [4, 5]
+    >>> [v for v in recent(limit=3, order_asc=False)]
+    [5, 4, 3]
     """
     if db is None:
         raise Exception('please connect before using `recent` method.')
     cur = db.cursor()
+    sql = SQLS['recent_doc_asc'] if order_asc else SQLS['recent_doc_desc']
     result = []
-    for row in cur.execute(SQLS['recent_doc'], [limit, offset]):
+    for row in cur.execute(sql, [limit, offset]):
         values = json.loads(row[0])
         if isinstance(values, dict):
             values['id'] = row[1]
