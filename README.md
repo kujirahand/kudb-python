@@ -27,7 +27,7 @@ $ python3 -m pip install kudb
 ## Usage
 
 - (1) connect to database --- kudb.connect()
-- (2) CRUID
+- (2) CRUD
   - insert data --- kudb.insert()
   - update data --- kudb.update()
   - get data --- kudb.get_all() / kudb.get()
