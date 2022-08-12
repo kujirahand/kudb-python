@@ -72,7 +72,7 @@ count doc
 
 
 
-## delete(id=None, key=None, tag=None, file=None)
+## delete(id=None, key=None, tag=None, doc_keys=None, file=None)
 
 delete by id or key
 
@@ -82,12 +82,27 @@ delete by id or key
 >>> delete(id=3)
 >>> [a for a in get_all()]
 [1, 2]
+```
+
+
+delete key in key-value store:
+```
 >>> clear()
 >>> set_key('Taro', 30)
 >>> set_key('Jiro', 18)
 >>> delete(key='Taro')
 >>> list(get_keys())
 ['Jiro']
+```
+
+
+delete doc_keys in docs
+```
+>>> clear()
+>>> insert_many([{'name': 'A'},{'name': 'B'},{'name': 'C'}])
+>>> delete(doc_keys={'name': 'A'})
+>>> len(get_all())
+2
 ```
 
 
@@ -129,7 +144,7 @@ get doc by id or key
 
 ```
 >>> clear(file=MEMORY_FILE)
->>> insert_many([{'name': 'A'},{'name': 'B'},{'name': 'C'}], tag='name')
+>>> insert_many([{'name': 'A'},{'name': 'B'},{'name': 'C'}], tag_name='name')
 >>> get(id=1)['name']
 'A'
 >>> get(tag='C')[0]['name']
@@ -180,7 +195,7 @@ get doc by tag
 
 ```
 >>> clear(file=MEMORY_FILE)
->>> insert_many( [{'name': 'A'}, {'name': 'B'}, {'name': 'C'}], tag='name' )
+>>> insert_many( [{'name': 'A'}, {'name': 'B'}, {'name': 'C'}], tag_name='name' )
 >>> get_by_tag('B')[0]['name']
 'B'
 ```
@@ -245,6 +260,7 @@ insert doc
 >>> [a['name'] for a in get_all()]
 ['A', 'B']
 ```
+
 
 insert doc with tag
 ```
@@ -337,7 +353,7 @@ update by id
 update by id:
 ```
 >>> clear()
->>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag="name")
+>>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag_name="name")
 >>> update(id=2, new_value={"name":"B", "age": 10})
 >>> get_by_tag("B")[0]["age"]
 10
@@ -347,7 +363,7 @@ update by id:
 update by tag:
 ```
 >>> clear()
->>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag="name")
+>>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag_name="name")
 >>> update(tag="B", new_value={"name":"B", "age": 15})
 >>> get_by_tag("B")[0]["age"]
 15
@@ -361,7 +377,7 @@ update doc value by tag
 
 ```
 >>> clear()
->>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag="name")
+>>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag_name="name")
 >>> update_by_tag("B", {"name":"B", "age": 15})
 >>> get_by_tag("B")[0]["age"]
 15
@@ -375,7 +391,7 @@ update doc value by tag
 
 ```
 >>> clear()
->>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag="name")
+>>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag_name="name")
 >>> update_by_tag("B", {"name":"B", "age": 15})
 >>> get_by_tag("B")[0]["age"]
 15
