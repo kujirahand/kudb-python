@@ -232,7 +232,7 @@ get keys
 
 
 
-## insert(values, file=None, tag=None)
+## insert(value, file=None, tag_name=None, tag=None)
 
 insert doc
 
@@ -244,16 +244,20 @@ insert doc
 2
 >>> [a['name'] for a in get_all()]
 ['A', 'B']
+```
+
+insert doc with tag
+```
 >>> clear()
->>> insert({'name':'banana', 'price': 30})
+>>> insert({'name':'banana', 'price': 30}, tag='banana')
 1
->>> get_key("_tag")
-'name'
+>>> get_by_tag("banana")[0]['price']
+30
 ```
 
 
 
-## insert_many(value_list, file=None, tag=None)
+## insert_many(value_list, file=None, tag_name=None)
 
 insert many doc
 
