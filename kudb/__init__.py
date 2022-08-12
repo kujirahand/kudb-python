@@ -9,4 +9,5 @@ from .kudb import connect, close, get_key, get_by_id, get_by_tag, set_key, get_k
     get_all, recent, get, insert, find, update, delete, clear, clear_doc, \
     MEMORY_FILE, insert_many, update_by_tag, update_by_id, count_doc
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
+

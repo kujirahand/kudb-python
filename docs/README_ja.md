@@ -18,11 +18,23 @@ $ python3 -m pip install kudb
 - [(GitHub) github.com/kujirahand/kudb-python](https://github.com/kujirahand/kudb-python)
 - [(PyPI) pypi.org/project/kudb/](https://pypi.org/project/kudb/)
 
+# ドキュメント
+
+- [/README.md](https://github.com/kujirahand/kudb-python/blob/main/README.md)
+- [/docs/README_ja.md](https://github.com/kujirahand/kudb-python/blob/main/docs/README_ja.md)
+- [/docs/functions.md](https://github.com/kujirahand/kudb-python/blob/main/docs/functions.md)
+
 ## 使い方
 
 - (1) データベースに接続 --- kudb.connect()
-- (2) データ挿入や更新、検索など --- kudb.insert() / kudb.update() / kudb.get_all()
+- (2) データ挿入や更新、検索
+  - データの追加 --- kudb.insert()
+  - データの更新 --- kudb.update()
+  - データの取得 --- kudb.get_all() / kudb.get()
+  - データの削除 --- kudb.delete()
 - (3) データベースを閉じる --- kudb.close()
+- [メソッドの一覧](https://github.com/kujirahand/kudb-python/blob/main/docs/functions.md)
+
 
 ## 基本的なサンプル
 
@@ -183,9 +195,4 @@ print(kudb.get_key('hoge_1st', 'not exists'))
 # 閉じる
 kudb.close()
 ```
-
-# Documents
-
-- [/docs/functions.md](https://github.com/kujirahand/kudb-python/blob/main/docs/functions.md)
-- [/docs/README_ja.md](https://github.com/kujirahand/kudb-python/blob/main/docs/README_ja.md)
 
