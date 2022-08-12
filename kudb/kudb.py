@@ -435,7 +435,7 @@ def get(id=None, key=None, tag=None, file=None):
         return get_key(key, None)
     raise Exception('need id or key in `get` method')
 
-def insert(values, file=None, tag=None):
+def insert(value, file=None, tag_name=None, tag=None):
     """
     insert doc
     >>> clear(file=MEMORY_FILE)
@@ -445,11 +445,12 @@ def insert(values, file=None, tag=None):
     2
     >>> [a['name'] for a in get_all()]
     ['A', 'B']
+    insert doc with tag
     >>> clear()
-    >>> insert({'name':'banana', 'price': 30})
+    >>> insert({'name':'banana', 'price': 30}, tag='banana')
     1
-    >>> get_key("_tag")
-    'name'
+    >>> get_by_tag("banana")[0]['price']
+    30
     """
     if file is not None:
         connect(file)
@@ -458,20 +459,26 @@ def insert(values, file=None, tag=None):
     try:
         lastid = None
         cur = db.cursor()
+        # check tag
         if tag is None:
-            tag = get_key('_tag', None)
-            if tag is None:
-                if isinstance(values, dict):
-                    tag = list(values.keys())[0]
-                    set_key('_tag', tag)
-        tag_value = ''
-        if tag is not None:
-            tag_value = str(values[tag])
+            if tag_name is None:
+                tag_name = get_tag_name()
+            if isinstance(value, dict):
+                if tag_name in value:
+                    tag = value[tag_name]
+        # auto detect tag_name
+        if tag is None:
+            if isinstance(value, dict):
+                tag_name = list(value.keys())[0]
+                set_tag_name(tag_name)
+                tag = str(value[tag_name])
+            else:
+                tag = ''
         cur.execute(
             SQLS['insert_doc'],
             [
-                json.dumps(values, ensure_ascii=False),
-                tag_value,
+                json.dumps(value, ensure_ascii=False),
+                tag,
                 int(time.time()),
                 int(time.time())
             ])
@@ -482,7 +489,7 @@ def insert(values, file=None, tag=None):
     except Exception as err:
         raise Exception('database insert error:' + str(err)) from err
 
-def insert_many(value_list, file=None, tag=None):
+def insert_many(value_list, file=None, tag_name=None):
     """
     insert many doc
     >>> clear(file=MEMORY_FILE)
@@ -501,17 +508,17 @@ def insert_many(value_list, file=None, tag=None):
     # make many values
     t = int(time.time())
     # check tag
-    if tag is None:
-        tag = get_key('_tag', 'tag')
+    if tag_name is None:
+        tag_name = get_tag_name()
     else:
-        set_key('_tag', tag)
+        set_tag_name(tag_name)
     rows = []
     for val in value_list:
         tag_value = ''
         if isinstance(val, dict):
-            if tag in val:
-                tag_value = val[tag]
-        rows.append([json.dumps(val), tag_value, t, t])
+            if tag_name in val:
+                tag_value = val[tag_name]
+        rows.append([json.dumps(val, ensure_ascii=False), tag_value, t, t])
     # insert
     try:
         cur = db.cursor()
@@ -705,6 +712,12 @@ def find(callback=None, keys=None, limit=None):
                 break
     cur.close()
     return result
+
+def set_tag_name(tag_name):
+    set_key('_tag', tag_name)
+
+def get_tag_name(def_tag_name='tag'):
+    return get_key('_tag', def_tag_name)
 
 if __name__ == '__main__':
     import doctest

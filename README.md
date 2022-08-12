@@ -54,15 +54,15 @@ kudb.connect('test.db')
 kudb.clear()
 
 # insert with tag / if you set tag then find data speedy
-kudb.insert({'name': 'Tako', 'age': 18}, tag='name')
-kudb.insert({'name': 'Ika', 'age': 19})
-kudb.insert({'name': 'Poko', 'age': 12})
+kudb.insert({'name': 'Tako', 'age': 18}, tag='Tako')
+kudb.insert({'name': 'Ika', 'age': 19}, tag='Ika')
+kudb.insert({'name': 'Poko', 'age': 12}, tag='Poko')
 
 # insert many data with tag
 kudb.insert_many([
     {"name": "A", "age": 10},
     {"name": "B", "age": 11},
-    {"name": "C", "age": 12}], tag='name')
+    {"name": "C", "age": 12}], tag_name='name')
 
 # get recent data
 for row in kudb.recent(2):
@@ -103,7 +103,7 @@ kudb.connect('test.db')
 kudb.clear()
 
 # insert data with tag
-kudb.insert({'name': 'Tako', 'age': 18}, tag='name')
+kudb.insert({'name': 'Tako', 'age': 18}, tag_name='name')
 kudb.insert({'name': 'Ika', 'age': 19})
 kudb.insert({'name': 'Poko', 'age': 12})
 kudb.insert({'name': 'Foo', 'age': 13})

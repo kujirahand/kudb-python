@@ -28,7 +28,7 @@ $ python3 -m pip install kudb
 
 一番簡単な使い方は次の通りです。
 
-```simple-doc.py
+```sample-doc.py
 import kudb
 
 # データベースへの接続
@@ -49,8 +49,9 @@ kudb.close()
 ```
 
 データの検索や抽出は次のように記述します。
+検索用のタグを指定できて、タグを使うと高速に検索できます。
 
-```simple-doc2.py
+```sample-doc2.py
 import kudb
 
 # データベースへの接続
@@ -60,38 +61,44 @@ kudb.connect('test.db')
 kudb.clear()
 
 # タグを指定してデータの挿入(タグを指定すると検索が速くなる)
-kudb.insert({'name': 'Tako', 'age': 18}, tag='name')
-kudb.insert({'name': 'Ika', 'age': 19})
-kudb.insert({'name': 'Poko', 'age': 12})
+kudb.insert({'name': 'Tako', 'age': 18}, tag='Tako')
+kudb.insert({'name': 'Ika', 'age': 19}, tag='Ika')
+kudb.insert({'name': 'Poko', 'age': 12}, tag='Poko')
+
+# タグを指定してデータを取得
+print('tag=Ika =>', kudb.get(tag='Ika')[0])
 
 # タグを指定してデータの一括挿入
 kudb.insert_many([
     {"name": "A", "age": 10},
     {"name": "B", "age": 11},
-    {"name": "C", "age": 12}], tag='name')
+    {"name": "C", "age": 12}], tag_name='name')
+
+# タグを指定してデータを取得
+print('tag=B =>', kudb.get(tag='B')[0])
 
 # 最後に挿入した2件を取り出す場合
 for row in kudb.recent(2):
-    print(row) # => B and C
+    print('recent(2) =>', row) # => B and C
 
 # IDを指定してデータを抽出(一番高速に抽出可能)
-print(kudb.get(id=1)) # => Tako
+print('id=1 =>', kudb.get(id=1)) # => Tako
 
 # タグを指定して抽出(それなりに高速に抽出)
 for row in kudb.get(tag="Ika"):
-    print(row) # Ika
+    print('tag=Ika =>', row) # Ika
 
 # キーを指定して抽出
 for row in kudb.find(keys={"name": "Ika"}): # nameがIkaのものを列挙
-    print(row) # Ika
+    print('find.keys={name:ika} => ', row) # Ika
 for row in kudb.find(keys={"age": 19}): # ageが19のものを列挙
-    print(row) # 19 (Ika)
+    print('find.keys={age:19} => ',row) # 19 (Ika)
 
 # lambda関数を指定してデータを抽出
 for row in kudb.find(lambda v: v['name'] == 'Ika'): # nameがIkaのものを列挙
-    print(row) # => Ika
+    print('lambda.name=Ika =>', row) # => Ika
 for row in kudb.find(lambda v: v['age'] >= 12): # ageが12以上のものを列挙
-    print(row) # => Ika
+    print('lambda.age=12 =>', row) # => Ika
 
 # データベースを閉じる
 kudb.close()
@@ -99,7 +106,7 @@ kudb.close()
 
 データの更新と削除は次の通りです。
 
-```simple-doc2.py
+```sample-doc3.py
 import kudb
 
 # データベースへの接続
@@ -108,7 +115,7 @@ kudb.connect('test.db')
 kudb.clear()
 
 # データの挿入
-kudb.insert({'name': 'Tako', 'age': 18}, tag='name')
+kudb.insert({'name': 'Tako', 'age': 18}, tag_name='name')
 kudb.insert({'name': 'Ika', 'age': 19})
 kudb.insert({'name': 'Poko', 'age': 12})
 kudb.insert({'name': 'Foo', 'age': 13})

@@ -28,10 +28,10 @@ kudb.clear()
 assert 0 == kudb.count_doc(), 'clear'
 
 # insert with tag
-kudb.insert({'name': 'Tako', 'age': 18}, tag='name')
+kudb.insert({'name': 'Tako', 'age': 18}, tag_name='name')
 kudb.insert({'name': 'Ika', 'age': 19})
 # insert_many with tag
-kudb.insert_many([{'name': 'Poko', 'age': 12}, {'name': 'Foo', 'age': 13}], tag='name')
+kudb.insert_many([{'name': 'Poko', 'age': 12}, {'name': 'Foo', 'age': 13}], tag_name='name')
 
 # delete id=2
 kudb.delete(id=2)
