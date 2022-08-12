@@ -147,11 +147,14 @@ def get_key(key, default = '', file=None):
         return default
     cur = db.cursor()
     try:
-        cur.execute(SQLS['select'], [key])
+        sql = SQLS['select']
+        cur.execute(sql, [key])
         values = cur.fetchone()
+        if values is None:
+            return default
         return json.loads(values[0])
     except Exception as err:
-        raise Exception('could not read database: ' + str(err)) from err
+        raise Exception(f'`get_key(%s)` could not read database: %s' % key, str(err)) from err
     finally:
         cur.close()
 
@@ -174,27 +177,31 @@ def get_info(key, default = ''):
 def set_key(key, value, file=None):
     """
     set data by key
-    >>> set_key('hoge', 30, file=':memory:')
+    >>> set_key('hoge', 30, file=':memory:') # insert
     >>> get_key('hoge')
     30
     >>> set_key(1, 40)
     >>> get_key(1)
     40
+    >>> set_key('hoge', 35) # update
+    >>> get_key('hoge')
+    35
     """
     if file is not None:
         connect(file)
     if db is None:
         raise Exception('please connect before using `set_key` method.')
     try:
+        value_json = json.dumps(value, ensure_ascii=False)
         cur = db.cursor()
         if key in CACHE_KEYS:
-            cur.execute(SQLS['update'], [value, int(time.time()), key])
+            cur.execute(SQLS['update'], [value_json, int(time.time()), key])
         else:
             cur.execute(
                 SQLS['insert'],
                 [
                     key,
-                    json.dumps(value, ensure_ascii=False),
+                    value_json,
                     int(time.time()),
                     int(time.time())
                 ]
@@ -517,6 +524,8 @@ def insert_many(value_list, file=None, tag=None):
 def update(id=None, new_value=None, tag=None):
     """
     update doc
+
+    update by id
     >>> clear(file=MEMORY_FILE)
     >>> insert_many([1,2,3,4,5])
     >>> get_by_id(1)
@@ -524,6 +533,15 @@ def update(id=None, new_value=None, tag=None):
     >>> update(1, 100)
     >>> get_by_id(1)
     100
+
+    update by id:
+    >>> clear()
+    >>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag="name")
+    >>> update(id=2, new_value={"name":"B", "age": 10})
+    >>> get_by_tag("B")[0]["age"]
+    10
+
+    update by tag:
     >>> clear()
     >>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag="name")
     >>> update(tag="B", new_value={"name":"B", "age": 15})
@@ -532,17 +550,22 @@ def update(id=None, new_value=None, tag=None):
     """
     if db is None:
         raise Exception('please connect before using `update_doc` method.')
+    # check tag
+    tag_name = get_key('_tag', 'tag')
+    tag_value = ''
+    if isinstance(new_value, dict):
+        if tag_name in new_value:
+            tag_value = str(new_value[tag_name])
+    # update
     try:
         cur = db.cursor()
-        tag_name = get_key('_tag', 'tag')
-        tag_value = ''
-        if isinstance(new_value, dict):
-            if tag_name in new_value:
-                tag_value = str(new_value[tag_name])
+        sql = ''
         if id is not None:
-            cur.execute(SQLS['update_doc'], [json.dumps(new_value, ensure_ascii=False), tag_value, int(time.time()), id])
+            sql = SQLS['update_doc']
+            cur.execute(sql, [json.dumps(new_value, ensure_ascii=False), tag_value, int(time.time()), id])
         elif tag is not None:
-            cur.execute(SQLS['update_doc_by_tag'], [json.dumps(new_value, ensure_ascii=False), tag_value, int(time.time()), tag])
+            sql = SQLS['update_doc_by_tag']
+            cur.execute(sql, [json.dumps(new_value, ensure_ascii=False), tag_value, int(time.time()), tag])
         cur.close()
         db.commit()
     except Exception as err:

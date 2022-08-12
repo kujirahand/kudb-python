@@ -23,43 +23,109 @@ $ python3 -m pip install kudb
 document database sample:
 
 ```simple-doc.py
-import kudb, json
+import kudb
 
-# connect to file database
+# connect to file db
 kudb.connect('test.db')
 
-# insert
+# insert data
+kudb.insert({'name': 'Tako', 'age': 18})
+kudb.insert({'name': 'Ika', 'age': 19})
+kudb.insert({'name': 'Poko', 'age': 12})
+kudb.insert({'name': 'Foo', 'age': 13})
+
+# get all data
+for row in kudb.get_all():
+    print(row) # all
+
+# close db
+kudb.close()
+```
+
+Sample of finding data:
+
+```simple-doc-find.py
+import kudb
+
+# connect to file db
+kudb.connect('test.db')
+
+# clear all data
+kudb.clear()
+
+# insert with tag / if you set tag then find data speedy
+kudb.insert({'name': 'Tako', 'age': 18}, tag='name')
+kudb.insert({'name': 'Ika', 'age': 19})
+kudb.insert({'name': 'Poko', 'age': 12})
+
+# insert many data with tag
+kudb.insert_many([
+    {"name": "A", "age": 10},
+    {"name": "B", "age": 11},
+    {"name": "C", "age": 12}], tag='name')
+
+# get recent data
+for row in kudb.recent(2):
+    print(row) # => B and C
+
+# get data by id (most speedy)
+print(kudb.get(id=1)) # => Tako
+
+# get data by tag
+for row in kudb.get(tag="Ika"):
+    print(row) # Ika
+
+# find data by keys
+for row in kudb.find(keys={"name": "Ika"}): # enum name=Ika
+    print(row) # Ika
+for row in kudb.find(keys={"age": 19}): # enum age=19
+    print(row) # 19 (Ika)
+
+# find data with lambda
+for row in kudb.find(lambda v: v['name'] == 'Ika'): # enum name=Ika
+    print(row) # => Ika
+for row in kudb.find(lambda v: v['age'] >= 12): # enum age >= 12
+    print(row) # => Ika
+
+# close db
+kudb.close()
+```
+
+Sampe of Updating / Deleteing data:
+
+```samle-doc-update-delete.py
+import kudb
+
+# connet to db
+kudb.connect('test.db')
+
+# clear all data
+kudb.clear()
+
+# insert data with tag
 kudb.insert({'name': 'Tako', 'age': 18}, tag='name')
 kudb.insert({'name': 'Ika', 'age': 19})
 kudb.insert({'name': 'Poko', 'age': 12})
 kudb.insert({'name': 'Foo', 'age': 13})
 
-# insert_many
-kudb.insert_many([{"name": "A", "age": 10},{"name": "B", "age": 11},{"name": "C", "age": 12}], tag='name')
+# delete by id
+kudb.delete(id=2)
 
-# get data
+# delete by tag
+kudb.delete(tag='Foo')
+
+# update by id
+kudb.update_by_id(1, new_value={'name': 'Tako', 'age': 22})
+print(kudb.get(id=1))
+
+# update by tag
+kudb.update_by_tag('Tako', new_value={'name': 'Tako', 'age': 23})
+print(kudb.get(tag='Tako'))
+
+# show all data
+print("--- all ---")
 for row in kudb.get_all():
-    print(row) # all
-
-# get recent
-for row in kudb.recent(2):
-    print(row) # => B and C
-
-# get data by id
-print(kudb.get(id=1)) # => Tako
-
-# find by lambda
-print(json.dumps(kudb.find(lambda v: v['name']=='Ika'))) # => Ika
-
-# find by keys
-print(json.dumps(kudb.find(keys={"name": "Ika"}))) # => Ika
-print(json.dumps(kudb.find(keys={"age": 19}))) # => Ika
-
-# get by tag
-print(kudb.get(tag="Ika")[0]) # => Ika
-
-# close
-kudb.close()
+    print(row)
 ```
 
 ### Sample for key-value-store

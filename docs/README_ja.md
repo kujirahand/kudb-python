@@ -123,6 +123,10 @@ kudb.delete(tag='Foo')
 kudb.update_by_id(1, new_value={'name': 'Tako', 'age': 22})
 print(kudb.get(id=1))
 
+# データの更新(tagを指定)
+kudb.update_by_tag('Tako', new_value={'name': 'Tako', 'age': 23})
+print(kudb.get(tag='Tako'))
+
 # データを全部表示
 print("--- all ---")
 for row in kudb.get_all():
