@@ -58,6 +58,20 @@ Connect to database
 
 
 
+## count_doc(file=None)
+
+count doc
+
+
+```
+>>> clear(file=MEMORY_FILE)
+>>> insert_many([{"name": "A"},{"name": "B"},{"name": "C"}])
+>>> count_doc()
+3
+```
+
+
+
 ## delete(id=None, key=None, tag=None, file=None)
 
 delete by id or key
@@ -286,20 +300,25 @@ get recent docs
 set data by key
 
 ```
->>> set_key('hoge', 30, file=':memory:')
+>>> set_key('hoge', 30, file=':memory:') # insert
 >>> get_key('hoge')
 30
 >>> set_key(1, 40)
 >>> get_key(1)
 40
+>>> set_key('hoge', 35) # update
+>>> get_key('hoge')
+35
 ```
 
 
 
-## update(doc_id, values)
+## update(id=None, new_value=None, tag=None)
 
 update doc
 
+
+update by id
 ```
 >>> clear(file=MEMORY_FILE)
 >>> insert_many([1,2,3,4,5])
@@ -308,6 +327,54 @@ update doc
 >>> update(1, 100)
 >>> get_by_id(1)
 100
+```
+
+
+update by id:
+```
+>>> clear()
+>>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag="name")
+>>> update(id=2, new_value={"name":"B", "age": 10})
+>>> get_by_tag("B")[0]["age"]
+10
+```
+
+
+update by tag:
+```
+>>> clear()
+>>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag="name")
+>>> update(tag="B", new_value={"name":"B", "age": 15})
+>>> get_by_tag("B")[0]["age"]
+15
+```
+
+
+
+## update_by_id(id, new_value)
+
+update doc value by tag
+
+```
+>>> clear()
+>>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag="name")
+>>> update_by_tag("B", {"name":"B", "age": 15})
+>>> get_by_tag("B")[0]["age"]
+15
+```
+
+
+
+## update_by_tag(tag, new_value)
+
+update doc value by tag
+
+```
+>>> clear()
+>>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag="name")
+>>> update_by_tag("B", {"name":"B", "age": 15})
+>>> get_by_tag("B")[0]["age"]
+15
 ```
 
 
