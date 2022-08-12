@@ -24,11 +24,11 @@ $ python3 -m pip install kudb
 - (2) データ挿入や更新、検索など --- kudb.insert() / kudb.update() / kudb.get_all()
 - (3) データベースを閉じる --- kudb.close()
 
-## サンプル
+## 基本的なサンプル
 
 一番簡単な使い方は次の通りです。
 
-```sample-doc.py
+```sample-basic.py
 import kudb
 
 # データベースへの接続
@@ -42,22 +42,54 @@ kudb.insert({'name': 'Foo', 'age': 13})
 
 # データを全部抽出する
 for row in kudb.get_all():
-    print(row) # all
+    print('get_all >', row) # all
 
 # データベースを閉じる
 kudb.close()
 ```
 
-データの検索や抽出は次のように記述します。
-検索用のタグを指定できて、タグを使うと高速に検索できます。
+## 簡単な検索
 
-```sample-doc2.py
+保存したデータを検索するには、次のようなプログラムを記述します。
+
+```sample-find.py
 import kudb
-
-# データベースへの接続
 kudb.connect('test.db')
 
 # 全部のデータをクリア
+kudb.clear()
+
+# データの一括挿入
+kudb.insert_many([
+    {'name': 'Tako', 'age': 18},
+    {'name': 'Ika', 'age': 19},
+    {'name': 'Hirame', 'age': 20},
+])
+
+# IDを指定してデータを取得
+print('id=2 >', kudb.get(id=2))
+
+# データを検索 (keys)
+for row in kudb.find(keys={'name': 'Tako'}):
+    print('name=Tako >', row)
+
+# データを検索 (lambda)
+for row in kudb.find(lambda v: v['name'] == 'Tako'):
+    print('name=Tako >', row)
+
+# 最後に挿入した2件を取り出す場合
+for row in kudb.recent(2):
+    print('recent(2) =>', row) # => Ika, Hirame
+```
+
+## タグを指定して検索
+
+検索用のタグを指定すると高速に検索できます。
+タグを指定すると、更新や削除が容易です。
+
+```sample-tag.py
+import kudb
+kudb.connect('test.db')
 kudb.clear()
 
 # タグを指定してデータの挿入(タグを指定すると検索が速くなる)
@@ -77,10 +109,6 @@ kudb.insert_many([
 # タグを指定してデータを取得
 print('tag=B =>', kudb.get(tag='B')[0])
 
-# 最後に挿入した2件を取り出す場合
-for row in kudb.recent(2):
-    print('recent(2) =>', row) # => B and C
-
 # IDを指定してデータを抽出(一番高速に抽出可能)
 print('id=1 =>', kudb.get(id=1)) # => Tako
 
@@ -99,53 +127,45 @@ for row in kudb.find(lambda v: v['name'] == 'Ika'): # nameがIkaのものを列�
     print('lambda.name=Ika =>', row) # => Ika
 for row in kudb.find(lambda v: v['age'] >= 12): # ageが12以上のものを列挙
     print('lambda.age=12 =>', row) # => Ika
-
-# データベースを閉じる
-kudb.close()
 ```
+
+## 更新と削除
 
 データの更新と削除は次の通りです。
 
-```sample-doc3.py
+```sample-update.py
 import kudb
-
-# データベースへの接続
 kudb.connect('test.db')
-# 全部クリア
 kudb.clear()
 
 # データの挿入
-kudb.insert({'name': 'Tako', 'age': 18}, tag_name='name')
-kudb.insert({'name': 'Ika', 'age': 19})
-kudb.insert({'name': 'Poko', 'age': 12})
-kudb.insert({'name': 'Foo', 'age': 13})
+kudb.insert_many([
+    {"name": "A", "age": 10},
+    {"name": "B", "age": 11},
+    {"name": "C", "age": 12},
+    {"name": "D", "age": 13},
+    {"name": "E", "age": 14}], tag_name='name')
 
-# Ikaを削除(idを指定)
-kudb.delete(id=2)
+# Eを削除(idを指定)
+kudb.delete(id=5)
 
-# Fooを削除(tagを指定)
-kudb.delete(tag='Foo')
+# Cを削除(tagを指定)
+kudb.delete(tag='C')
 
 # データの更新(idを指定)
-kudb.update_by_id(1, {'name': 'Tako', 'age': 22})
-print(kudb.get(id=1))
+kudb.update_by_id(1, {'name': 'A', 'age': 22})
+print('update.A=22 >', kudb.get(id=1))
 
 # データの更新(tagを指定)
-kudb.update_by_tag('Tako', {'name': 'Tako', 'age': 23})
-print(kudb.get(tag='Tako'))
-
-# データを全部表示
-print("--- all ---")
-for row in kudb.get_all():
-    print(row)
+kudb.update_by_tag('B', {'name': 'B', 'age': 23})
+print('update.B=23 >', kudb.get(tag='B'))
 ```
-
 
 ### キー・バリューストアの使い方
 
 Key-Valueストアとしても利用できます。
 
-```simple-kvs.py
+```sample-kvs.py
 import kudb
 
 # DBに接続
