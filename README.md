@@ -115,7 +115,7 @@ kudb.delete(id=2)
 kudb.delete(tag='Foo')
 
 # update by id
-kudb.update_by_id(1, new_value={'name': 'Tako', 'age': 22})
+kudb.update_by_id(1, {'name': 'Tako', 'age': 22})
 print(kudb.get(id=1))
 
 # update by tag

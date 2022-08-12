@@ -120,11 +120,11 @@ kudb.delete(id=2)
 kudb.delete(tag='Foo')
 
 # データの更新(idを指定)
-kudb.update_by_id(1, new_value={'name': 'Tako', 'age': 22})
+kudb.update_by_id(1, {'name': 'Tako', 'age': 22})
 print(kudb.get(id=1))
 
 # データの更新(tagを指定)
-kudb.update_by_tag('Tako', new_value={'name': 'Tako', 'age': 23})
+kudb.update_by_tag('Tako', {'name': 'Tako', 'age': 23})
 print(kudb.get(tag='Tako'))
 
 # データを全部表示

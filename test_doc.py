@@ -42,13 +42,10 @@ kudb.delete(tag='Foo')
 assert len(kudb.get(tag='Foo')) == 0, 'delete by tag'
 
 # update by id
-print(kudb.get_all())
 kudb.update_by_id(1, {'name': 'Tako', 'age': 22})
-# assert kudb.get(id=1)['age'] == 22, 'update by id'
+assert kudb.get(id=1)['age'] == 22, 'update by id'
 
-"""
-# データの更新(tagを指定)
+# update by tag
 kudb.update_by_tag('Tako', new_value={'name': 'Tako', 'age': 23})
-print(kudb.get(tag='Tako'))
-"""
+assert kudb.get(tag='Tako')[0]['age'] == 23
 
