@@ -82,7 +82,7 @@ print(kudb.get_key('hoge_1st', 'not exists'))
 kudb.close()
 ```
 
-# functions
+# Documents
 
 - [/docs/functions.md](https://github.com/kujirahand/kudb-python/blob/main/docs/functions.md)
-
+- [/docs/README_ja.md](https://github.com/kujirahand/kudb-python/blob/main/docs/README_ja.md)

@@ -73,7 +73,8 @@ SQLS_TEMPLATE = {
     'get_doc_by_id': 'SELECT value, id FROM doc__TABLE_NAME__ WHERE id=?',
     'get_doc_by_tag': 'SELECT value, id FROM doc__TABLE_NAME__ WHERE tag=? LIMIT ?',
     'insert_doc': 'INSERT INTO doc__TABLE_NAME__ (value, tag, ctime, mtime) VALUES (?, ?, ?, ?)',
-    'update_doc': 'UPDATE doc__TABLE_NAME__ SET value=?, mtime=? WHERE id=?',
+    'update_doc': 'UPDATE doc__TABLE_NAME__ SET value=?, tag=?, mtime=? WHERE id=?',
+    'update_doc_by_tag': 'UPDATE doc__TABLE_NAME__ SET value=?, tag=?, mtime=? WHERE tag=?',
     'delete_doc': 'DELETE FROM doc__TABLE_NAME__ WHERE id=?',
     'delete_doc_by_tag': 'DELETE FROM doc__TABLE_NAME__ WHERE tag=?',
     'clear_doc': 'DELETE FROM doc__TABLE_NAME__',
@@ -495,6 +496,8 @@ def insert_many(value_list, file=None, tag=None):
     # check tag
     if tag is None:
         tag = get_key('_tag', 'tag')
+    else:
+        set_key('_tag', tag)
     rows = []
     for val in value_list:
         tag_value = ''
@@ -511,7 +514,7 @@ def insert_many(value_list, file=None, tag=None):
     except Exception as err:
         raise Exception('database insert error:' + str(err)) from err
 
-def update(doc_id, values):
+def update(id=None, new_value=None, tag=None):
     """
     update doc
     >>> clear(file=MEMORY_FILE)
@@ -521,16 +524,51 @@ def update(doc_id, values):
     >>> update(1, 100)
     >>> get_by_id(1)
     100
+    >>> clear()
+    >>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag="name")
+    >>> update(tag="B", new_value={"name":"B", "age": 15})
+    >>> get_by_tag("B")[0]["age"]
+    15
     """
     if db is None:
         raise Exception('please connect before using `update_doc` method.')
     try:
         cur = db.cursor()
-        cur.execute(SQLS['update_doc'], [json.dumps(values), int(time.time()), doc_id])
+        tag_name = get_key('_tag', 'tag')
+        tag_value = ''
+        if isinstance(new_value, dict):
+            if tag_name in new_value:
+                tag_value = str(new_value[tag_name])
+        if id is not None:
+            cur.execute(SQLS['update_doc'], [json.dumps(new_value, ensure_ascii=False), tag_value, int(time.time()), id])
+        elif tag is not None:
+            cur.execute(SQLS['update_doc_by_tag'], [json.dumps(new_value, ensure_ascii=False), tag_value, int(time.time()), tag])
         cur.close()
         db.commit()
     except Exception as err:
         raise Exception('database update error:' + str(err)) from err
+
+def update_by_tag(tag, new_value):
+    """
+    update doc value by tag
+    >>> clear()
+    >>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag="name")
+    >>> update_by_tag("B", {"name":"B", "age": 15})
+    >>> get_by_tag("B")[0]["age"]
+    15
+    """
+    update(tag=tag, new_value=new_value)
+
+def update_by_id(id, new_value):
+    """
+    update doc value by tag
+    >>> clear()
+    >>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag="name")
+    >>> update_by_tag("B", {"name":"B", "age": 15})
+    >>> get_by_tag("B")[0]["age"]
+    15
+    """
+    update(id=id, new_value=new_value)
 
 def delete(id=None, key=None, tag=None, file=None):
     """
