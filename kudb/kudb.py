@@ -555,15 +555,20 @@ def update(id=None, new_value=None, tag=None):
     >>> update(tag="B", new_value={"name":"B", "age": 15})
     >>> get_by_tag("B")[0]["age"]
     15
+
     """
     if db is None:
         raise Exception('please connect before using `update_doc` method.')
     # check tag
-    tag_name = get_key('_tag', 'tag')
-    tag_value = ''
-    if isinstance(new_value, dict):
-        if tag_name in new_value:
-            tag_value = str(new_value[tag_name])
+    if tag is None:
+        tag_name = get_key('_tag', 'tag')
+        tag_value = ''
+        if isinstance(new_value, dict):
+            if tag_name in new_value:
+                tag_value = str(new_value[tag_name])
+    else:
+        tag_name = 'tag'
+        tag_value = tag
     # update
     try:
         cur = db.cursor()

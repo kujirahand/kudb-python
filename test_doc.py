@@ -49,3 +49,5 @@ assert kudb.get(id=1)['age'] == 22, 'update by id'
 kudb.update_by_tag('Tako', new_value={'name': 'Tako', 'age': 23})
 assert kudb.get(tag='Tako')[0]['age'] == 23
 
+kudb.update(tag='Tako', new_value={'name': 'Tako', 'age': 19})
+assert kudb.get(tag='Tako')[0]['age'] == 19
