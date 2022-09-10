@@ -146,9 +146,18 @@ find doc by lambda
 
 
 
+## find_one(callback=None, keys=None, limit=None)
+
+>> clear(file=MEMORY_FILE)
+
+>> insert_many([{'name': 'Taro', 'age': 30}, {'name': 'Jiro', 'age': 18}])
+>> find_one(keys={'name': 'Jiro'})['age']
+18
+
+
 ## get(id=None, key=None, tag=None, file=None)
 
-get doc by id or key
+get docs by id or key or tag
 
 ```
 >>> clear(file=MEMORY_FILE)
@@ -251,6 +260,19 @@ get keys
 >>> set_key('Iko', 20)
 >>> sorted(list(get_keys()))
 ['Ako', 'Iko']
+```
+
+
+
+## get_one(id=None, tag=None, file=None)
+
+get one doc by id or tag
+
+```
+>>> clear(file=MEMORY_FILE)
+>>> insert_many([{'tag': 'A', 'v': 1}, {'tag': 'A', 'v': 2}, {'tag': 'B', 'v': 3}], tag_name='tag')
+>>> get_one(tag='A')['v']
+1
 ```
 
 
