@@ -47,7 +47,17 @@ assert kudb.get(id=1)['age'] == 22, 'update by id'
 
 # update by tag
 kudb.update_by_tag('Tako', new_value={'name': 'Tako', 'age': 23})
-assert kudb.get(tag='Tako')[0]['age'] == 23
+assert kudb.get(tag='Tako')[0]['age'] == 23, 'update doc by tag 1'
 
 kudb.update(tag='Tako', new_value={'name': 'Tako', 'age': 19})
-assert kudb.get(tag='Tako')[0]['age'] == 19
+assert kudb.get(tag='Tako')[0]['age'] == 19, 'update doc by tag 2'
+
+# get_one
+kudb.clear()
+kudb.insert({'name': 'Taro', 'age': 30}, tag='Taro')
+kudb.insert({'name': 'Jiro', 'age': 29}, tag='Jiro')
+kudb.insert({'name': 'Sabu', 'age': 28}, tag='Sabu')
+assert kudb.get_one(tag='Taro')['name'] == 'Taro', 'get_one'
+assert kudb.get_one(tag='Goro') is None, 'get_one (None)'
+
+

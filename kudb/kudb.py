@@ -26,6 +26,7 @@ Insert and find:
 """
 # pylint: disable=C0103,C301,W0622,W0603
 import sqlite3
+from subprocess import call
 import time
 import json
 
@@ -415,7 +416,7 @@ def get_by_tag(tag, limit=None, file=None):
 
 def get(id=None, key=None, tag=None, file=None):
     """
-    get doc by id or key
+    get docs by id or key or tag
     >>> clear(file=MEMORY_FILE)
     >>> insert_many([{'name': 'A'},{'name': 'B'},{'name': 'C'}], tag_name='name')
     >>> get(id=1)['name']
@@ -434,6 +435,25 @@ def get(id=None, key=None, tag=None, file=None):
     if key is not None:
         return get_key(key, None)
     raise Exception('need id or key in `get` method')
+
+def get_one(id=None, tag=None, file=None):
+    """
+    get one doc by id or tag
+    >>> clear(file=MEMORY_FILE)
+    >>> insert_many([{'tag': 'A', 'v': 1}, {'tag': 'A', 'v': 2}, {'tag': 'B', 'v': 3}], tag_name='tag')
+    >>> get_one(tag='A')['v']
+    1
+    """
+    if file is not None:
+        connect(file)
+    if id is not None:
+        return get(id)
+    if tag is not None:
+        r = get_by_tag(tag)
+        if len(r) == 0:
+            return None
+        return r[0]
+    raise Exception('need id or tag in `get_one` method')
 
 def insert(value, file=None, tag_name=None, tag=None):
     """
@@ -741,6 +761,18 @@ def find(callback=None, keys=None, limit=None):
                 break
     cur.close()
     return result
+
+def find_one(callback=None, keys=None, limit=None):
+    """
+    >> clear(file=MEMORY_FILE)
+    >> insert_many([{'name': 'Taro', 'age': 30}, {'name': 'Jiro', 'age': 18}])
+    >> find_one(keys={'name': 'Jiro'})['age']
+    18
+    """
+    r = find(callback=callback, keys=keys, limit=limit)
+    if len(r) == 0:
+        return None
+    return r[0]
 
 def set_tag_name(tag_name):
     set_key('_tag', tag_name)

@@ -103,6 +103,14 @@ delete doc_keys in docs
 >>> delete(doc_keys={'name': 'A'})
 >>> len(get_all())
 2
+>>> clear()
+>>> insert_many([{'name': 'A', 'age': 30},{'name': 'B', 'age': 31},{'name': 'C', 'age': 32}])
+>>> delete(doc_keys={'name': 'A', 'age': 30}) # delete
+>>> len(get_all())
+2
+>>> delete(doc_keys={'name': 'B', 'age': 3}) # not delete any data
+>>> len(get_all())
+2
 ```
 
 
