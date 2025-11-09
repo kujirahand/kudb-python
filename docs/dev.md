@@ -8,12 +8,16 @@ pyproject.tomlのバージョンを書き換えます。
 
 ## 2. 変更をコミット
 
-git add .
-git commit -m "Bump version to 0.2.5"
+```sh
+git status
+git commit -m "v0.2.5"
 git tag v0.2.5
 git push && git push --tags
+```
 
 ## 3. デプロイ
 
+```
 make deploy
+```
 
