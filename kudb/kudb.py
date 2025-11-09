@@ -842,6 +842,38 @@ def get_tag_name(def_tag_name: str = "tag") -> Any:
     """get tag name"""
     return get_key("_tag", def_tag_name)
 
+def get_high_score(limit: int = 10, score_key: str = "score") -> List[Any]:
+    """
+    get high score docs
+    >>> clear(file=MEMORY_FILE)
+    >>> insert_many([{'name': 'A', 'score': 50}, {'name': 'B', 'score': 80}, {'name': 'C', 'score': 70}])
+    >>> [a['name'] for a in get_high_score(2)]
+    ['B', 'C']
+    """
+    result = get_all()
+    result.sort(key=lambda x: x.get(score_key, 0), reverse=True)
+    return result[:limit]
+
+def insert_score(score: int, name: str, meta: Optional[Dict[str, Any]] = None, score_key: str = "score", file: Optional[str] = None) -> Optional[int]:
+    """
+    insert score doc
+    >>> clear(file=MEMORY_FILE)
+    >>> insert_score(100, "A")
+    1
+    >>> insert_score(200, "B")
+    2
+    >>> get_by_id(1)['name']
+    'A'
+    >>> get_by_id(2)['name']
+    'B'
+    >>> get_high_score(2)[0]['name']
+    'B'
+    """
+    if meta is None:
+        meta = {}
+    meta["name"] = name
+    meta[score_key] = score
+    return insert(meta, file=file)
 
 if __name__ == "__main__":
     import doctest

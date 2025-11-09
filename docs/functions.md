@@ -1,12 +1,12 @@
 # kudb functions
 
-## change_db(filename = ':memory:', table_name = 'kudb')
+## change_db(filename: str = ":memory:", table_name: str = "kudb") -> None
 
 Change Database
 
 
 
-## clear(file=None)
+## clear(file: Optional[str] = None) -> None
 
 clear doc and key-value-store
 
@@ -23,7 +23,7 @@ clear doc and key-value-store
 
 
 
-## clear_doc(file=None)
+## clear_doc(file: Optional[str] = None) -> None
 
 clear all doc
 
@@ -40,25 +40,25 @@ clear all doc
 
 
 
-## clear_keys()
+## clear_keys() -> None
 
 clear all keys
 
 
 
-## close()
+## close() -> None
 
 close database
 
 
 
-## connect(filename = ':memory:', table_name='kudb')
+## connect(filename: str = ":memory:", table_name: str = "kudb") -> sqlite3.Connection
 
 Connect to database
 
 
 
-## count_doc(file=None)
+## count_doc(file: Optional[str] = None) -> int
 
 count doc
 
@@ -72,7 +72,7 @@ count doc
 
 
 
-## delete(id=None, key=None, tag=None, doc_keys=None, file=None)
+## delete(id: Optional[int] = None, key: Optional[str] = None, tag: Optional[str] = None, doc_keys: Optional[Dict[str, Any]] = None, file: Optional[str] = None) -> None
 
 delete by id or key
 
@@ -115,13 +115,13 @@ delete doc_keys in docs
 
 
 
-## delete_key(key)
+## delete_key(key: str) -> None
 
 delete key
 
 
 
-## find(callback=None, keys=None, limit=None)
+## find(
 
 find doc by lambda
 
@@ -146,7 +146,7 @@ find doc by lambda
 
 
 
-## find_one(callback=None, keys=None, limit=None)
+## find_one(callback: Optional[Callable[[Any], bool]] = None, keys: Optional[Dict[str, Any]] = None, limit: Optional[int] = None) -> Any
 
 >> clear(file=MEMORY_FILE)
 
@@ -155,7 +155,7 @@ find doc by lambda
 18
 
 
-## get(id=None, key=None, tag=None, file=None)
+## get(
 
 get docs by id or key or tag
 
@@ -170,7 +170,7 @@ get docs by id or key or tag
 
 
 
-## get_all(limit=None, order_asc=True, from_id=None, file=None)
+## get_all(limit: Optional[int] = None, order_asc: bool = True, from_id: Optional[int] = None, file: Optional[str] = None) -> List[Any]
 
 get all doc
 
@@ -191,7 +191,7 @@ get all doc
 
 
 
-## get_by_id(id, def_value=None, file=None)
+## get_by_id(id: int, def_value: Any = None, file: Optional[str] = None) -> Any
 
 get doc by id
 
@@ -206,7 +206,7 @@ get doc by id
 
 
 
-## get_by_tag(tag, limit=None, file=None)
+## get_by_tag(tag: str, limit: Optional[int] = None, file: Optional[str] = None) -> List[Any]
 
 get doc by tag
 
@@ -219,13 +219,13 @@ get doc by tag
 
 
 
-## get_info(key, default = '')
+## get_info(key: str, default: str = "") -> Any
 
 get data and info
 
 
 
-## get_key(key, default = '', file=None)
+## get_key(key: str, default: Any = "", file: Optional[str] = None) -> Any
 
 get data by key
 
@@ -249,7 +249,7 @@ get data by key
 
 
 
-## get_keys(clear_cache = True)
+## get_keys(clear_cache: bool = True) -> Any
 
 get keys
 
@@ -264,7 +264,7 @@ get keys
 
 
 
-## get_one(id=None, tag=None, file=None)
+## get_one(id: Optional[int] = None, tag: Optional[str] = None, file: Optional[str] = None) -> Any
 
 get one doc by id or tag
 
@@ -277,7 +277,7 @@ get one doc by id or tag
 
 
 
-## insert(value, file=None, tag_name=None, tag=None)
+## insert(value: Any, file: Optional[str] = None, tag_name: Optional[str] = None, tag: Optional[str] = None) -> Optional[int]
 
 insert doc
 
@@ -303,7 +303,7 @@ insert doc with tag
 
 
 
-## insert_many(value_list, file=None, tag_name=None)
+## insert_many(value_list: List[Any], file: Optional[str] = None, tag_name: Optional[str] = None) -> None
 
 insert many doc
 
@@ -318,13 +318,13 @@ insert many doc
 
 
 
-## kvs_json()
+## kvs_json() -> str
 
 dump key-value items to json
 
 
 
-## recent(limit=100, offset=0, order_asc=True)
+## recent(limit: int = 100, offset: int = 0, order_asc: bool = True) -> List[Any]
 
 get recent docs
 
@@ -345,7 +345,7 @@ get recent docs
 
 
 
-## set_key(key, value, file=None)
+## set_key(key: str, value: Any, file: Optional[str] = None) -> None
 
 set data by key
 
@@ -363,7 +363,7 @@ set data by key
 
 
 
-## update(id=None, new_value=None, tag=None)
+## update(id: Optional[int] = None, new_value: Any = None, tag: Optional[str] = None) -> None
 
 update doc
 
@@ -401,7 +401,7 @@ update by tag:
 
 
 
-## update_by_id(id, new_value)
+## update_by_id(id: int, new_value: Any) -> None
 
 update doc value by tag
 
@@ -415,7 +415,7 @@ update doc value by tag
 
 
 
-## update_by_tag(tag, new_value)
+## update_by_tag(tag: str, new_value: Any) -> None
 
 update doc value by tag
 

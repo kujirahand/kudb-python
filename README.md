@@ -9,8 +9,10 @@ simple document database for python
 
 ## Installation
 
-```
-$ python3 -m pip install kudb
+```sh
+pip install kudb
+# or
+python3 -m pip install kudb
 ```
 
 ## Repository
@@ -24,7 +26,7 @@ $ python3 -m pip install kudb
 - [/docs/README_ja.md](https://github.com/kujirahand/kudb-python/blob/main/docs/README_ja.md)
 - [/docs/functions.md](https://github.com/kujirahand/kudb-python/blob/main/docs/functions.md)
 
-## Usage
+## Usage - document based
 
 - (1) connect to database --- kudb.connect()
 - (2) CRUD
@@ -33,14 +35,14 @@ $ python3 -m pip install kudb
   - get data --- kudb.get_all() / kudb.get()
   - delete data --- kudb.delete()
 - (3) close --- kudb.close()
-- [functions](https://github.com/kujirahand/kudb-python/blob/main/docs/functions.md)
 
+[functions](https://github.com/kujirahand/kudb-python/blob/main/docs/functions.md)
 
 ## Basic Sample
 
 Basic sample
 
-```sample-basic.py
+```py:sample-basic.py
 import kudb
 
 kudb.connect('test.db')
@@ -63,7 +65,7 @@ kudb.close()
 
 Find data
 
-```sample-find.py
+```py:sample-find.py
 import kudb
 kudb.connect('test.db')
 
@@ -93,13 +95,48 @@ for row in kudb.recent(2):
     print('recent(2) =>', row) # => Ika, Hirame
 ```
 
+## High Score　Management
+
+High score management sample:
+
+```py:sample-highscore.py
+import kudb
+
+kudb.connect('game.db')
+kudb.clear()
+
+# insert score data
+kudb.insert_score(100, "Player A")
+kudb.insert_score(250, "Player B")
+kudb.insert_score(180, "Player C")
+kudb.insert_score(320, "Player D")
+kudb.insert_score(150, "Player E")
+
+# get high score (top 3)
+for i, row in enumerate(kudb.get_high_score(3), 1):
+    print(f"{i}. {row['name']}: {row['score']}")
+# Output:
+# 1. Player D: 320
+# 2. Player B: 250
+# 3. Player C: 180
+
+# insert score with additional metadata
+kudb.insert_score(400, "Player F", meta={"level": 5, "time": 120})
+
+# get top score
+top_player = kudb.get_high_score(1)[0]
+print(f"Top Score: {top_player['name']} - {top_player['score']}")
+
+kudb.close()
+```
+
 ## Search data with tag
 
 The doc data can set tag.
 When use data with tag, you can search data quickly.
 And use data with tag, you can update/delete data quickly.
 
-```sample-tag.py
+```py:sample-tag.py
 import kudb
 kudb.connect('test.db')
 kudb.clear()
@@ -145,7 +182,7 @@ for row in kudb.find(lambda v: v['age'] >= 12): # enum data when age >= 12
 
 Update and delete sample:
 
-```sample-update.py
+```py:sample-update.py
 import kudb
 kudb.connect('test.db')
 kudb.clear()
@@ -177,7 +214,7 @@ print('update.B=23 >', kudb.get(tag='B'))
 
 Key-Value Store sample:
 
-```sample-kvs.py
+```py:sample-kvs.py
 import kudb
 
 kudb.connect('test.db')
