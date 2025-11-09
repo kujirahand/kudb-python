@@ -1,0 +1,18 @@
+# Development dependencies for kudb
+
+# Testing
+pytest>=7.0.0
+
+# Type checking
+mypy>=1.0.0
+
+# Code formatting
+black>=22.0.0
+
+# Linting
+flake8>=5.0.0
+pylint>=2.15.0
+
+# Build tools
+build>=0.10.0
+twine>=4.0.0

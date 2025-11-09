@@ -25,7 +25,7 @@ Insert and find:
 'Sabu'
 """
 
-from typing import Optional, Callable, Any, Dict
+from typing import Optional, Callable, Any, Dict, List
 import sqlite3
 import time
 import json
@@ -34,14 +34,14 @@ import json
 class KudbError(Exception):
     """Kudb Error"""
 
-db = None
-cache_db = {}
-CACHE_KEYS = {}
-SQLS = {}
-MEMORY_FILE = ":memory:"
-cur_filename = MEMORY_FILE
-cur_tablename = "kudb"
-SQLITE_MAX_INT = 9223372036854775807
+db: Optional[sqlite3.Connection] = None
+cache_db: Dict[str, sqlite3.Connection] = {}
+CACHE_KEYS: Dict[str, bool] = {}
+SQLS: Dict[str, str] = {}
+MEMORY_FILE: str = ":memory:"
+cur_filename: str = MEMORY_FILE
+cur_tablename: str = "kudb"
+SQLITE_MAX_INT: int = 9223372036854775807
 # SQL template
 SQLS_TEMPLATE = {
     # kvs
@@ -87,7 +87,7 @@ SQLS_TEMPLATE = {
 }
 
 
-def connect(filename=":memory:", table_name="kudb"):
+def connect(filename: str = ":memory:", table_name: str = "kudb") -> sqlite3.Connection:
     """Connect to database"""
     global SQLS, cur_filename, db, cur_tablename
     # generate sqls
@@ -114,12 +114,12 @@ def connect(filename=":memory:", table_name="kudb"):
         raise KudbError("could not initalize database file: " + str(err)) from err
 
 
-def change_db(filename=":memory:", table_name="kudb"):
+def change_db(filename: str = ":memory:", table_name: str = "kudb") -> None:
     """Change Database"""
     connect(filename, table_name)
 
 
-def close():
+def close() -> None:
     """close database"""
     global db, cur_filename
     if db is not None:
@@ -129,7 +129,7 @@ def close():
     cur_filename = ""
 
 
-def get_key(key: str, default: str | None = "", file=None):
+def get_key(key: str, default: Any = "", file: Optional[str] = None) -> Any:
     """
     get data by key
 
@@ -170,7 +170,7 @@ def get_key(key: str, default: str | None = "", file=None):
         cur.close()
 
 
-def get_info(key: str, default: str = ""):
+def get_info(key: str, default: str = "") -> Any:
     """get data and info"""
     cur: Optional[sqlite3.Cursor] = None
     if db is None:
@@ -189,7 +189,7 @@ def get_info(key: str, default: str = ""):
             cur.close()
 
 
-def set_key(key, value, file=None):
+def set_key(key: str, value: Any, file: Optional[str] = None) -> None:
     """
     set data by key
     >>> set_key('hoge', 30, file=':memory:') # insert
@@ -222,7 +222,7 @@ def set_key(key, value, file=None):
         raise KudbError("database could not write key: " + str(err)) from err
 
 
-def delete_key(key):
+def delete_key(key: str) -> None:
     """delete key"""
     if db is None:
         raise KudbError("please connect before using `delete_key` method.")
@@ -237,7 +237,7 @@ def delete_key(key):
         raise KudbError("database could not delete key: " + str(err)) from err
 
 
-def get_keys(clear_cache=True):
+def get_keys(clear_cache: bool = True) -> Any:
     """
     get keys
     >>> _ = connect()
@@ -260,7 +260,7 @@ def get_keys(clear_cache=True):
     return CACHE_KEYS.keys()
 
 
-def kvs_json():
+def kvs_json() -> str:
     """dump key-value items to json"""
     obj = {}
     for key in get_keys():
@@ -268,7 +268,7 @@ def kvs_json():
     return json.dumps(obj, ensure_ascii=False)
 
 
-def clear_keys():
+def clear_keys() -> None:
     """clear all keys"""
     global CACHE_KEYS
     if db is None:
@@ -283,7 +283,7 @@ def clear_keys():
         raise KudbError("could not read database: " + str(err)) from err
 
 
-def count_doc(file=None):
+def count_doc(file: Optional[str] = None) -> int:
     """
     count doc
 
@@ -305,7 +305,7 @@ def count_doc(file=None):
         raise KudbError("could not count docs:" + str(err)) from err
 
 
-def get_all(limit=None, order_asc=True, from_id=None, file=None):
+def get_all(limit: Optional[int] = None, order_asc: bool = True, from_id: Optional[int] = None, file: Optional[str] = None) -> List[Any]:
     """
     get all doc
     >>> clear(file=MEMORY_FILE)
@@ -348,7 +348,7 @@ def get_all(limit=None, order_asc=True, from_id=None, file=None):
     return result
 
 
-def recent(limit=100, offset=0, order_asc=True):
+def recent(limit: int = 100, offset: int = 0, order_asc: bool = True) -> List[Any]:
     """
     get recent docs
     >>> clear(file=MEMORY_FILE)
@@ -379,7 +379,7 @@ def recent(limit=100, offset=0, order_asc=True):
     return result
 
 
-def get_by_id(id, def_value=None, file=None):
+def get_by_id(id: int, def_value: Any = None, file: Optional[str] = None) -> Any:
     """
     get doc by id
     >>> clear(file=MEMORY_FILE)
@@ -406,7 +406,7 @@ def get_by_id(id, def_value=None, file=None):
     return values
 
 
-def get_by_tag(tag: str, limit: Optional[int] = None, file: Optional[str] = None):
+def get_by_tag(tag: str, limit: Optional[int] = None, file: Optional[str] = None) -> List[Any]:
     """
     get doc by tag
     >>> clear(file=MEMORY_FILE)
@@ -459,7 +459,7 @@ def get(
     raise KudbError("need id or key in `get` method")
 
 
-def get_one(id=None, tag=None, file=None):
+def get_one(id: Optional[int] = None, tag: Optional[str] = None, file: Optional[str] = None) -> Any:
     """
     get one doc by id or tag
     >>> clear(file=MEMORY_FILE)
@@ -479,7 +479,7 @@ def get_one(id=None, tag=None, file=None):
     raise KudbError("need id or tag in `get_one` method")
 
 
-def insert(value, file=None, tag_name=None, tag=None):
+def insert(value: Any, file: Optional[str] = None, tag_name: Optional[str] = None, tag: Optional[str] = None) -> Optional[int]:
     """
     insert doc
     >>> clear(file=MEMORY_FILE)
@@ -536,7 +536,7 @@ def insert(value, file=None, tag_name=None, tag=None):
         raise KudbError("database insert error:" + str(err)) from err
 
 
-def insert_many(value_list, file=None, tag_name=None):
+def insert_many(value_list: List[Any], file: Optional[str] = None, tag_name: Optional[str] = None) -> None:
     """
     insert many doc
     >>> clear(file=MEMORY_FILE)
@@ -576,7 +576,7 @@ def insert_many(value_list, file=None, tag_name=None):
         raise KudbError("database insert error:" + str(err)) from err
 
 
-def update(id=None, new_value=None, tag=None):
+def update(id: Optional[int] = None, new_value: Any = None, tag: Optional[str] = None) -> None:
     """
     update doc
 
@@ -648,7 +648,7 @@ def update(id=None, new_value=None, tag=None):
         raise KudbError("database update error:" + str(err)) from err
 
 
-def update_by_tag(tag, new_value):
+def update_by_tag(tag: str, new_value: Any) -> None:
     """
     update doc value by tag
     >>> clear()
@@ -660,7 +660,7 @@ def update_by_tag(tag, new_value):
     update(tag=tag, new_value=new_value)
 
 
-def update_by_id(id, new_value):
+def update_by_id(id: int, new_value: Any) -> None:
     """
     update doc value by tag
     >>> clear()
@@ -672,7 +672,7 @@ def update_by_id(id, new_value):
     update(id=id, new_value=new_value)
 
 
-def delete(id=None, key=None, tag=None, doc_keys=None, file=None):
+def delete(id: Optional[int] = None, key: Optional[str] = None, tag: Optional[str] = None, doc_keys: Optional[Dict[str, Any]] = None, file: Optional[str] = None) -> None:
     """
     delete by id or key
     >>> clear(file=MEMORY_FILE)
@@ -732,7 +732,7 @@ def delete(id=None, key=None, tag=None, doc_keys=None, file=None):
     raise KudbError("should set id or key in `delete` method")
 
 
-def clear_doc(file=None):
+def clear_doc(file: Optional[str] = None) -> None:
     """
     clear all doc
 
@@ -754,7 +754,7 @@ def clear_doc(file=None):
     db.commit()
 
 
-def clear(file=None):
+def clear(file: Optional[str] = None) -> None:
     """
     clear doc and key-value-store
 
@@ -773,10 +773,10 @@ def clear(file=None):
 
 
 def find(
-    callback: Optional[Callable[[Dict[str, Any]], bool]] = None,
+    callback: Optional[Callable[[Any], bool]] = None,
     keys: Optional[Dict[str, Any]] = None,
     limit: Optional[int] = None,
-):
+) -> List[Any]:
     """
     find doc by lambda
     >>> clear(file=MEMORY_FILE)
@@ -820,7 +820,7 @@ def find(
     return result
 
 
-def find_one(callback=None, keys=None, limit=None):
+def find_one(callback: Optional[Callable[[Any], bool]] = None, keys: Optional[Dict[str, Any]] = None, limit: Optional[int] = None) -> Any:
     """
     >> clear(file=MEMORY_FILE)
     >> insert_many([{'name': 'Taro', 'age': 30}, {'name': 'Jiro', 'age': 18}])
@@ -833,12 +833,12 @@ def find_one(callback=None, keys=None, limit=None):
     return r[0]
 
 
-def set_tag_name(tag_name):
+def set_tag_name(tag_name: str) -> None:
     """set tag name"""
     set_key("_tag", tag_name)
 
 
-def get_tag_name(def_tag_name="tag"):
+def get_tag_name(def_tag_name: str = "tag") -> Any:
     """get tag name"""
     return get_key("_tag", def_tag_name)
 

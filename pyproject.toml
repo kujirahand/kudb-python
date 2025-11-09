@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kudb"
+version = "0.2.4"
+description = "Simple Document database Library"
+readme = "README.md"
+requires-python = ">=3.6"
+license = {text = "MIT"}
+authors = [
+    {name = "kujirahand", email = "web@kujirahand.com"}
+]
+maintainers = [
+    {name = "kujirahand", email = "web@kujirahand.com"}
+]
+keywords = ["database", "document-database", "key-value-store", "sqlite", "nosql"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Database",
+    "Topic :: Database :: Database Engines/Servers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/kujirahand/kudb-python"
+Repository = "https://github.com/kujirahand/kudb-python"
+"Bug Tracker" = "https://github.com/kujirahand/kudb-python/issues"
+Documentation = "https://github.com/kujirahand/kudb-python/blob/main/README.md"
+
+[tool.setuptools]
+packages = ["kudb"]
+
+[tool.setuptools.package-data]
+kudb = ["py.typed"]

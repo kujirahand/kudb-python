@@ -1,0 +1,9 @@
+# kudb - Simple Document database Library
+# This package has no runtime dependencies (uses only Python standard library)
+
+# Development dependencies (optional)
+# Uncomment if you need these for development:
+# pytest>=7.0.0
+# mypy>=1.0.0
+# black>=22.0.0
+# flake8>=5.0.0
