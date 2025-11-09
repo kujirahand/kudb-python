@@ -24,24 +24,28 @@ Insert and find:
 >>> find(lambda v: v["age"] >= 20)[0]["name"]
 'Sabu'
 """
-# pylint: disable=C0103,C301,W0622,W0603
+
+from typing import Optional, Callable, Any, Dict
 import sqlite3
-from subprocess import call
 import time
 import json
+
+
+class KudbError(Exception):
+    """Kudb Error"""
 
 db = None
 cache_db = {}
 CACHE_KEYS = {}
 SQLS = {}
-MEMORY_FILE = ':memory:'
+MEMORY_FILE = ":memory:"
 cur_filename = MEMORY_FILE
-cur_tablename = 'kudb'
-SQLITE_MAX_INT=9223372036854775807
+cur_tablename = "kudb"
+SQLITE_MAX_INT = 9223372036854775807
 # SQL template
 SQLS_TEMPLATE = {
     # kvs
-    'create': '''
+    "create": """
     CREATE TABLE IF NOT EXISTS __TABLE_NAME__ (
         key_id INTEGER PRIMARY KEY,
         key TEXT UNIQUE,
@@ -49,16 +53,16 @@ SQLS_TEMPLATE = {
         ctime INTEGER DEFAULT 0,
         mtime INTEGER DEFAULT 0
     )
-    ''',
-    'select': 'SELECT value FROM __TABLE_NAME__ WHERE key=?',
-    'select_info': 'SELECT * FROM __TABLE_NAME__ WHERE key=?',
-    'keys': 'SELECT key FROM __TABLE_NAME__',
-    'insert': 'INSERT INTO __TABLE_NAME__ (key, value, ctime, mtime) VALUES (?, ?, ?, ?)',
-    'update': 'UPDATE __TABLE_NAME__ SET value=?, mtime=? WHERE key=?',
-    'delete': 'DELETE FROM __TABLE_NAME__ WHERE key=?',
-    'clear': 'DELETE FROM __TABLE_NAME__',
+    """,
+    "select": "SELECT value FROM __TABLE_NAME__ WHERE key=?",
+    "select_info": "SELECT * FROM __TABLE_NAME__ WHERE key=?",
+    "keys": "SELECT key FROM __TABLE_NAME__",
+    "insert": "INSERT INTO __TABLE_NAME__ (key, value, ctime, mtime) VALUES (?, ?, ?, ?)",
+    "update": "UPDATE __TABLE_NAME__ SET value=?, mtime=? WHERE key=?",
+    "delete": "DELETE FROM __TABLE_NAME__ WHERE key=?",
+    "clear": "DELETE FROM __TABLE_NAME__",
     # doc
-    'create_doc': '''
+    "create_doc": """
     CREATE TABLE IF NOT EXISTS doc__TABLE_NAME__ (
         id INTEGER PRIMARY KEY,
         tag TEXT DEFAULT '',
@@ -66,32 +70,33 @@ SQLS_TEMPLATE = {
         ctime INTEGER DEFAULT 0,
         mtime INTEGER DEFAULT 0
     )
-    ''',
-    'select_doc': 'SELECT value, id FROM doc__TABLE_NAME__',
-    'select_doc_desc': 'SELECT value, id FROM doc__TABLE_NAME__ WHERE id <= ? ORDER BY id DESC LIMIT ?',
-    'select_doc_asc': 'SELECT value, id FROM doc__TABLE_NAME__ WHERE id >= ? ORDER BY id ASC LIMIT ?',
-    'recent_doc': 'SELECT value, id FROM doc__TABLE_NAME__ ORDER BY id DESC LIMIT ? OFFSET ?',
-    'get_doc_by_id': 'SELECT value, id FROM doc__TABLE_NAME__ WHERE id=?',
-    'get_doc_by_tag': 'SELECT value, id FROM doc__TABLE_NAME__ WHERE tag=? LIMIT ?',
-    'insert_doc': 'INSERT INTO doc__TABLE_NAME__ (value, tag, ctime, mtime) VALUES (?, ?, ?, ?)',
-    'update_doc': 'UPDATE doc__TABLE_NAME__ SET value=?, tag=?, mtime=? WHERE id=?',
-    'update_doc_by_tag': 'UPDATE doc__TABLE_NAME__ SET value=?, tag=?, mtime=? WHERE tag=?',
-    'delete_doc': 'DELETE FROM doc__TABLE_NAME__ WHERE id=?',
-    'delete_doc_by_tag': 'DELETE FROM doc__TABLE_NAME__ WHERE tag=?',
-    'clear_doc': 'DELETE FROM doc__TABLE_NAME__',
-    'count_doc': 'SELECT count(id) FROM doc__TABLE_NAME__',
+    """,
+    "select_doc": "SELECT value, id FROM doc__TABLE_NAME__",
+    "select_doc_desc": "SELECT value, id FROM doc__TABLE_NAME__ WHERE id <= ? ORDER BY id DESC LIMIT ?",
+    "select_doc_asc": "SELECT value, id FROM doc__TABLE_NAME__ WHERE id >= ? ORDER BY id ASC LIMIT ?",
+    "recent_doc": "SELECT value, id FROM doc__TABLE_NAME__ ORDER BY id DESC LIMIT ? OFFSET ?",
+    "get_doc_by_id": "SELECT value, id FROM doc__TABLE_NAME__ WHERE id=?",
+    "get_doc_by_tag": "SELECT value, id FROM doc__TABLE_NAME__ WHERE tag=? LIMIT ?",
+    "insert_doc": "INSERT INTO doc__TABLE_NAME__ (value, tag, ctime, mtime) VALUES (?, ?, ?, ?)",
+    "update_doc": "UPDATE doc__TABLE_NAME__ SET value=?, tag=?, mtime=? WHERE id=?",
+    "update_doc_by_tag": "UPDATE doc__TABLE_NAME__ SET value=?, tag=?, mtime=? WHERE tag=?",
+    "delete_doc": "DELETE FROM doc__TABLE_NAME__ WHERE id=?",
+    "delete_doc_by_tag": "DELETE FROM doc__TABLE_NAME__ WHERE tag=?",
+    "clear_doc": "DELETE FROM doc__TABLE_NAME__",
+    "count_doc": "SELECT count(id) FROM doc__TABLE_NAME__",
 }
 
-def connect(filename = ':memory:', table_name='kudb'):
+
+def connect(filename=":memory:", table_name="kudb"):
     """Connect to database"""
     global SQLS, cur_filename, db, cur_tablename
     # generate sqls
     SQLS = {}
     for key, val in SQLS_TEMPLATE.items():
-        SQLS[key] = val.replace('__TABLE_NAME__', table_name)
+        SQLS[key] = val.replace("__TABLE_NAME__", table_name)
     # check cache
-    if (filename in cache_db) and (cur_tablename == table_name): # already open?
-        db = cache_db[filename] # use_cache
+    if (filename in cache_db) and (cur_tablename == table_name):  # already open?
+        db = cache_db[filename]  # use_cache
         cur_filename = filename
         return db
     # connect to sqlite3
@@ -101,16 +106,18 @@ def connect(filename = ':memory:', table_name='kudb'):
     cur_tablename = table_name
     try:
         # create table
-        db.executescript(SQLS['create'] + ';' + SQLS['create_doc'])
+        db.executescript(SQLS["create"] + ";" + SQLS["create_doc"])
         # make cache keys
         get_keys(True)
         return db
     except Exception as err:
-        raise Exception('could not initalize database file: ' + str(err)) from err
+        raise KudbError("could not initalize database file: " + str(err)) from err
 
-def change_db(filename = ':memory:', table_name = 'kudb'):
+
+def change_db(filename=":memory:", table_name="kudb"):
     """Change Database"""
     connect(filename, table_name)
+
 
 def close():
     """close database"""
@@ -119,9 +126,10 @@ def close():
         db.close()
         del cache_db[cur_filename]
     db = None
-    cur_filename = ''
+    cur_filename = ""
 
-def get_key(key, default = '', file=None):
+
+def get_key(key: str, default: str | None = "", file=None):
     """
     get data by key
 
@@ -143,37 +151,43 @@ def get_key(key, default = '', file=None):
     if file is not None:
         connect(file)
     if db is None:
-        raise Exception('please connect before using `get` method.')
+        raise KudbError("please connect before using `get` method.")
     if key not in CACHE_KEYS:
         return default
     cur = db.cursor()
     try:
-        sql = SQLS['select']
+        sql = SQLS["select"]
         cur.execute(sql, [key])
         values = cur.fetchone()
         if values is None:
             return default
         return json.loads(values[0])
     except Exception as err:
-        raise Exception(f'`get_key(%s)` could not read database: %s' % key, str(err)) from err
+        raise KudbError(
+            f"`get_key({key})` could not read database: {str(err)}"
+        ) from err
     finally:
         cur.close()
 
-def get_info(key, default = ''):
+
+def get_info(key: str, default: str = ""):
     """get data and info"""
+    cur: Optional[sqlite3.Cursor] = None
     if db is None:
-        raise Exception('please connect before using `get` method.')
+        raise KudbError("please connect before using `get` method.")
     if key not in CACHE_KEYS:
         return default
     try:
         cur = db.cursor()
-        cur.execute(SQLS['select_info'], [key])
+        cur.execute(SQLS["select_info"], [key])
         values = cur.fetchone()
         return values
     except Exception as err:
-        raise Exception('could not read database: ' + str(err)) from err
+        raise KudbError("could not read database: " + str(err)) from err
     finally:
-        cur.close()
+        if cur is not None:
+            cur.close()
+
 
 def set_key(key, value, file=None):
     """
@@ -191,43 +205,39 @@ def set_key(key, value, file=None):
     if file is not None:
         connect(file)
     if db is None:
-        raise Exception('please connect before using `set_key` method.')
+        raise KudbError("please connect before using `set_key` method.")
     try:
         value_json = json.dumps(value, ensure_ascii=False)
         cur = db.cursor()
         if key in CACHE_KEYS:
-            cur.execute(SQLS['update'], [value_json, int(time.time()), key])
+            cur.execute(SQLS["update"], [value_json, int(time.time()), key])
         else:
             cur.execute(
-                SQLS['insert'],
-                [
-                    key,
-                    value_json,
-                    int(time.time()),
-                    int(time.time())
-                ]
+                SQLS["insert"], [key, value_json, int(time.time()), int(time.time())]
             )
             CACHE_KEYS[key] = True
         cur.close()
         db.commit()
     except Exception as err:
-        raise Exception('database could not write key: ' + str(err)) from err
+        raise KudbError("database could not write key: " + str(err)) from err
+
 
 def delete_key(key):
     """delete key"""
     if db is None:
-        raise Exception('please connect before using `delete_key` method.')
+        raise KudbError("please connect before using `delete_key` method.")
     try:
         cur = db.cursor()
         if key in CACHE_KEYS:
-            cur.execute(SQLS['delete'], [key])
+            cur.execute(SQLS["delete"], [key])
             del CACHE_KEYS[key]
         cur.close()
         db.commit()
     except Exception as err:
-        raise Exception('database could not delete key: ' + str(err)) from err
+        raise KudbError("database could not delete key: " + str(err)) from err
 
-def get_keys(clear_cache = True):
+
+def get_keys(clear_cache=True):
     """
     get keys
     >>> _ = connect()
@@ -243,11 +253,12 @@ def get_keys(clear_cache = True):
     # Use Cache?
     if clear_cache or len(CACHE_KEYS) == 0:
         cur = db.cursor()
-        cur.execute(SQLS['keys'])
+        cur.execute(SQLS["keys"])
         CACHE_KEYS = {}
         for i in cur.fetchall():
             CACHE_KEYS[i[0]] = True
     return CACHE_KEYS.keys()
+
 
 def kvs_json():
     """dump key-value items to json"""
@@ -256,19 +267,21 @@ def kvs_json():
         obj[key] = get_key(key)
     return json.dumps(obj, ensure_ascii=False)
 
+
 def clear_keys():
     """clear all keys"""
     global CACHE_KEYS
     if db is None:
-        raise Exception('please connect before using `clear_keys` method.')
+        raise KudbError("please connect before using `clear_keys` method.")
     try:
         cur = db.cursor()
-        cur.execute(SQLS['clear'])
+        cur.execute(SQLS["clear"])
         CACHE_KEYS = {}
         cur.close()
         db.commit()
     except Exception as err:
-        raise Exception('could not read database: ' + str(err)) from err
+        raise KudbError("could not read database: " + str(err)) from err
+
 
 def count_doc(file=None):
     """
@@ -282,14 +295,15 @@ def count_doc(file=None):
     if file is not None:
         connect(file)
     if db is None:
-        raise Exception('please connect before using `count_doc` method.')
+        raise KudbError("please connect before using `count_doc` method.")
     try:
         cur = db.cursor()
-        cur.execute(SQLS['count_doc'])
+        cur.execute(SQLS["count_doc"])
         val = cur.fetchone()
         return val[0]
     except Exception as err:
-        raise Exception('could not count docs:' + str(err)) from err
+        raise KudbError("could not count docs:" + str(err)) from err
+
 
 def get_all(limit=None, order_asc=True, from_id=None, file=None):
     """
@@ -311,15 +325,15 @@ def get_all(limit=None, order_asc=True, from_id=None, file=None):
     if file is not None:
         connect(file)
     if db is None:
-        raise Exception('please connect before using `get_all` method.')
+        raise KudbError("please connect before using `get_all` method.")
     if limit is None:
         limit = count_doc()
-    sql = SQLS['select_doc_asc']
+    sql = SQLS["select_doc_asc"]
     if order_asc:
         if from_id is None:
             from_id = 1
     else:
-        sql =  SQLS['select_doc_desc']
+        sql = SQLS["select_doc_desc"]
         if from_id is None:
             from_id = SQLITE_MAX_INT
     # select doc
@@ -328,10 +342,11 @@ def get_all(limit=None, order_asc=True, from_id=None, file=None):
     for row in cur.execute(sql, [from_id, limit]):
         values = json.loads(row[0])
         if isinstance(values, dict):
-            values['id'] = row[1]
+            values["id"] = row[1]
         result.append(values)
     cur.close()
     return result
+
 
 def recent(limit=100, offset=0, order_asc=True):
     """
@@ -350,18 +365,19 @@ def recent(limit=100, offset=0, order_asc=True):
     [5, 4, 3]
     """
     if db is None:
-        raise Exception('please connect before using `recent` method.')
+        raise KudbError("please connect before using `recent` method.")
     cur = db.cursor()
     result = []
-    for row in cur.execute(SQLS['recent_doc'], [limit, offset]):
+    for row in cur.execute(SQLS["recent_doc"], [limit, offset]):
         values = json.loads(row[0])
         if isinstance(values, dict):
-            values['id'] = row[1]
+            values["id"] = row[1]
         result.append(values)
     cur.close()
     if order_asc:
         result.reverse()
     return result
+
 
 def get_by_id(id, def_value=None, file=None):
     """
@@ -376,20 +392,21 @@ def get_by_id(id, def_value=None, file=None):
     if file is not None:
         connect(file)
     if db is None:
-        raise Exception('please connect before using `get` method.')
+        raise KudbError("please connect before using `get` method.")
     cur = db.cursor()
-    cur.execute(SQLS['get_doc_by_id'], [id])
+    cur.execute(SQLS["get_doc_by_id"], [id])
     data_one = cur.fetchone()
     if data_one is None:
         return def_value
     values, id = data_one
     values = json.loads(values)
     if isinstance(values, dict):
-        values['id'] = id
+        values["id"] = id
     cur.close()
     return values
 
-def get_by_tag(tag, limit=None, file=None):
+
+def get_by_tag(tag: str, limit: Optional[int] = None, file: Optional[str] = None):
     """
     get doc by tag
     >>> clear(file=MEMORY_FILE)
@@ -400,21 +417,26 @@ def get_by_tag(tag, limit=None, file=None):
     if file is not None:
         connect(file)
     if db is None:
-        raise Exception('please connect before using `get` method.')
+        raise KudbError("please connect before using `get` method.")
     if limit is None:
         limit = count_doc()
     result = []
     cur = db.cursor()
-    for values, id in cur.execute(SQLS['get_doc_by_tag'], [tag, limit]):
+    for values, id in cur.execute(SQLS["get_doc_by_tag"], [tag, limit]):
         values = json.loads(values)
         if isinstance(values, dict):
-            values['id'] = id
+            values["id"] = id
         result.append(values)
     cur.close()
     return result
 
 
-def get(id=None, key=None, tag=None, file=None):
+def get(
+    id: Optional[int] = None,
+    key: Optional[str] = None,
+    tag: Optional[str] = None,
+    file: Optional[str] = None,
+) -> Any:
     """
     get docs by id or key or tag
     >>> clear(file=MEMORY_FILE)
@@ -427,14 +449,15 @@ def get(id=None, key=None, tag=None, file=None):
     if file is not None:
         connect(file)
     if db is None:
-        raise Exception('please connect before using `get` method.')
+        raise KudbError("please connect before using `get` method.")
     if id is not None:
         return get_by_id(id)
     if tag is not None:
         return get_by_tag(tag)
     if key is not None:
         return get_key(key, None)
-    raise Exception('need id or key in `get` method')
+    raise KudbError("need id or key in `get` method")
+
 
 def get_one(id=None, tag=None, file=None):
     """
@@ -453,7 +476,8 @@ def get_one(id=None, tag=None, file=None):
         if len(r) == 0:
             return None
         return r[0]
-    raise Exception('need id or tag in `get_one` method')
+    raise KudbError("need id or tag in `get_one` method")
+
 
 def insert(value, file=None, tag_name=None, tag=None):
     """
@@ -476,7 +500,7 @@ def insert(value, file=None, tag_name=None, tag=None):
     if file is not None:
         connect(file)
     if db is None:
-        raise Exception('please connect before using `insert` method.')
+        raise KudbError("please connect before using `insert` method.")
     try:
         lastid = None
         cur = db.cursor()
@@ -494,21 +518,23 @@ def insert(value, file=None, tag_name=None, tag=None):
                 set_tag_name(tag_name)
                 tag = str(value[tag_name])
             else:
-                tag = ''
+                tag = ""
         cur.execute(
-            SQLS['insert_doc'],
+            SQLS["insert_doc"],
             [
                 json.dumps(value, ensure_ascii=False),
                 tag,
                 int(time.time()),
-                int(time.time())
-            ])
+                int(time.time()),
+            ],
+        )
         lastid = cur.lastrowid
         cur.close()
         db.commit()
         return lastid
     except Exception as err:
-        raise Exception('database insert error:' + str(err)) from err
+        raise KudbError("database insert error:" + str(err)) from err
+
 
 def insert_many(value_list, file=None, tag_name=None):
     """
@@ -523,9 +549,9 @@ def insert_many(value_list, file=None, tag_name=None):
     if file is not None:
         connect(file)
     if db is None:
-        raise Exception('please connect before using `insert_many` method.')
+        raise KudbError("please connect before using `insert_many` method.")
     if not isinstance(value_list, list):
-        raise Exception('please set the list type arguments to `insert_many` method.')
+        raise KudbError("please set the list type arguments to `insert_many` method.")
     # make many values
     t = int(time.time())
     # check tag
@@ -535,7 +561,7 @@ def insert_many(value_list, file=None, tag_name=None):
         set_tag_name(tag_name)
     rows = []
     for val in value_list:
-        tag_value = ''
+        tag_value = ""
         if isinstance(val, dict):
             if tag_name in val:
                 tag_value = val[tag_name]
@@ -543,11 +569,12 @@ def insert_many(value_list, file=None, tag_name=None):
     # insert
     try:
         cur = db.cursor()
-        cur.executemany(SQLS['insert_doc'], rows)
+        cur.executemany(SQLS["insert_doc"], rows)
         cur.close()
         db.commit()
     except Exception as err:
-        raise Exception('database insert error:' + str(err)) from err
+        raise KudbError("database insert error:" + str(err)) from err
+
 
 def update(id=None, new_value=None, tag=None):
     """
@@ -578,31 +605,48 @@ def update(id=None, new_value=None, tag=None):
 
     """
     if db is None:
-        raise Exception('please connect before using `update_doc` method.')
+        raise KudbError("please connect before using `update_doc` method.")
     # check tag
     if tag is None:
-        tag_name = get_key('_tag', 'tag')
-        tag_value = ''
+        tag_name = get_key("_tag", "tag")
+        tag_value = ""
         if isinstance(new_value, dict):
             if tag_name in new_value:
                 tag_value = str(new_value[tag_name])
     else:
-        tag_name = 'tag'
+        tag_name = "tag"
         tag_value = tag
     # update
     try:
         cur = db.cursor()
-        sql = ''
+        sql = ""
         if id is not None:
-            sql = SQLS['update_doc']
-            cur.execute(sql, [json.dumps(new_value, ensure_ascii=False), tag_value, int(time.time()), id])
+            sql = SQLS["update_doc"]
+            cur.execute(
+                sql,
+                [
+                    json.dumps(new_value, ensure_ascii=False),
+                    tag_value,
+                    int(time.time()),
+                    id,
+                ],
+            )
         elif tag is not None:
-            sql = SQLS['update_doc_by_tag']
-            cur.execute(sql, [json.dumps(new_value, ensure_ascii=False), tag_value, int(time.time()), tag])
+            sql = SQLS["update_doc_by_tag"]
+            cur.execute(
+                sql,
+                [
+                    json.dumps(new_value, ensure_ascii=False),
+                    tag_value,
+                    int(time.time()),
+                    tag,
+                ],
+            )
         cur.close()
         db.commit()
     except Exception as err:
-        raise Exception('database update error:' + str(err)) from err
+        raise KudbError("database update error:" + str(err)) from err
+
 
 def update_by_tag(tag, new_value):
     """
@@ -615,6 +659,7 @@ def update_by_tag(tag, new_value):
     """
     update(tag=tag, new_value=new_value)
 
+
 def update_by_id(id, new_value):
     """
     update doc value by tag
@@ -625,6 +670,7 @@ def update_by_id(id, new_value):
     15
     """
     update(id=id, new_value=new_value)
+
 
 def delete(id=None, key=None, tag=None, doc_keys=None, file=None):
     """
@@ -661,16 +707,16 @@ def delete(id=None, key=None, tag=None, doc_keys=None, file=None):
     if file is not None:
         connect(file)
     if db is None:
-        raise Exception('please connect before using `delete` method.')
+        raise KudbError("please connect before using `delete` method.")
     if id is not None:
         cur = db.cursor()
-        cur.execute(SQLS['delete_doc'], [id])
+        cur.execute(SQLS["delete_doc"], [id])
         cur.close()
         db.commit()
         return
     if tag is not None:
         cur = db.cursor()
-        cur.execute(SQLS['delete_doc_by_tag'], [tag])
+        cur.execute(SQLS["delete_doc_by_tag"], [tag])
         cur.close()
         db.commit()
         return
@@ -680,10 +726,11 @@ def delete(id=None, key=None, tag=None, doc_keys=None, file=None):
     if doc_keys is not None:
         docs = find(keys=doc_keys)
         for row in docs:
-            id = row['id']
+            id = row["id"]
             delete(id=id)
         return
-    raise Exception('should set id or key in `delete` method')
+    raise KudbError("should set id or key in `delete` method")
+
 
 def clear_doc(file=None):
     """
@@ -700,11 +747,12 @@ def clear_doc(file=None):
     if file is not None:
         connect(file)
     if db is None:
-        raise Exception('please connect before using `clear_doc` method.')
+        raise KudbError("please connect before using `clear_doc` method.")
     cur = db.cursor()
-    cur.execute(SQLS['clear_doc'], [])
+    cur.execute(SQLS["clear_doc"], [])
     cur.close()
     db.commit()
+
 
 def clear(file=None):
     """
@@ -723,7 +771,12 @@ def clear(file=None):
     clear_keys()
     clear_doc()
 
-def find(callback=None, keys=None, limit=None):
+
+def find(
+    callback: Optional[Callable[[Dict[str, Any]], bool]] = None,
+    keys: Optional[Dict[str, Any]] = None,
+    limit: Optional[int] = None,
+):
     """
     find doc by lambda
     >>> clear(file=MEMORY_FILE)
@@ -744,23 +797,28 @@ def find(callback=None, keys=None, limit=None):
     'Taro'
     """
     if db is None:
-        raise Exception('please connect before using `find` method.')
+        raise KudbError("please connect before using `find` method.")
     result = []
     cur = db.cursor()
     # callback
     if (callback is None) and (keys is not None):
-        callback = lambda values : True if sum([(0 if (values[k] == v) else 1) for k, v in keys.items()]) == 0 else False
+        callback = lambda values: (
+            True
+            if sum([(0 if (values[k] == v) else 1) for k, v in keys.items()]) == 0
+            else False
+        )
     # find
-    for row in cur.execute(SQLS['select_doc']):
+    for row in cur.execute(SQLS["select_doc"]):
         values = json.loads(row[0])
         if isinstance(values, dict):
-            values['id'] = row[1]
-        if callback(values):
+            values["id"] = row[1]
+        if callback is not None and callback(values):
             result.append(values)
             if (limit is not None) and (len(result) >= limit):
                 break
     cur.close()
     return result
+
 
 def find_one(callback=None, keys=None, limit=None):
     """
@@ -774,12 +832,18 @@ def find_one(callback=None, keys=None, limit=None):
         return None
     return r[0]
 
+
 def set_tag_name(tag_name):
-    set_key('_tag', tag_name)
+    """set tag name"""
+    set_key("_tag", tag_name)
 
-def get_tag_name(def_tag_name='tag'):
-    return get_key('_tag', def_tag_name)
 
-if __name__ == '__main__':
+def get_tag_name(def_tag_name="tag"):
+    """get tag name"""
+    return get_key("_tag", def_tag_name)
+
+
+if __name__ == "__main__":
     import doctest
+
     doctest.testmod()
