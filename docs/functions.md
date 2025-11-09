@@ -11,7 +11,7 @@ Change Database
 clear doc and key-value-store
 
 
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many([1,2,3,4,5])
 >>> count_doc()
@@ -28,7 +28,7 @@ clear doc and key-value-store
 clear all doc
 
 
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many([1,2,3,4,5])
 >>> count_doc()
@@ -63,7 +63,7 @@ Connect to database
 count doc
 
 
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many([{"name": "A"},{"name": "B"},{"name": "C"}])
 >>> count_doc()
@@ -76,7 +76,7 @@ count doc
 
 delete by id or key
 
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many([1,2,3])
 >>> delete(id=3)
@@ -86,7 +86,7 @@ delete by id or key
 
 
 delete key in key-value store:
-```
+```py
 >>> clear()
 >>> set_key('Taro', 30)
 >>> set_key('Jiro', 18)
@@ -97,7 +97,7 @@ delete key in key-value store:
 
 
 delete doc_keys in docs
-```
+```py
 >>> clear()
 >>> insert_many([{'name': 'A'},{'name': 'B'},{'name': 'C'}])
 >>> delete(doc_keys={'name': 'A'})
@@ -125,7 +125,7 @@ delete key
 
 find doc by lambda
 
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many([{"name": "Taro", "age":30},{"name": "Bob", "age":19},{"name": "Coo", "age": 21}])
 >>> [a['name'] for a in find(lambda v: v['age'] == 19)]
@@ -159,7 +159,7 @@ find doc by lambda
 
 get docs by id or key or tag
 
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many([{'name': 'A'},{'name': 'B'},{'name': 'C'}], tag_name='name')
 >>> get(id=1)['name']
@@ -174,7 +174,7 @@ get docs by id or key or tag
 
 get all doc
 
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many([{'name':'A'},{'name':'B'},{'name':'C'},{'name':'D'}])
 >>> [a['name'] for a in get_all()]
@@ -195,7 +195,7 @@ get all doc
 
 get doc by id
 
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many( [{'name': 'A'}, {'name': 'B'}, {'name': 'C'}] )
 >>> get_by_id(1)['name']
@@ -210,7 +210,7 @@ get doc by id
 
 get doc by tag
 
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many( [{'name': 'A'}, {'name': 'B'}, {'name': 'C'}], tag_name='name' )
 >>> get_by_tag('B')[0]['name']
@@ -230,7 +230,7 @@ get data and info
 get data by key
 
 
-```
+```py
 >>> _ = connect()
 >>> set_key('Jiro', 30)
 >>> get_key('Jiro')
@@ -253,7 +253,7 @@ get data by key
 
 get keys
 
-```
+```py
 >>> _ = connect()
 >>> clear()
 >>> set_key('Ako', 19)
@@ -268,7 +268,7 @@ get keys
 
 get one doc by id or tag
 
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many([{'tag': 'A', 'v': 1}, {'tag': 'A', 'v': 2}, {'tag': 'B', 'v': 3}], tag_name='tag')
 >>> get_one(tag='A')['v']
@@ -281,7 +281,7 @@ get one doc by id or tag
 
 insert doc
 
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert({'name':'A'})
 1
@@ -293,7 +293,7 @@ insert doc
 
 
 insert doc with tag
-```
+```py
 >>> clear()
 >>> insert({'name':'banana', 'price': 30}, tag='banana')
 1
@@ -307,7 +307,7 @@ insert doc with tag
 
 insert many doc
 
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many([1,2,3,4,5])
 >>> get_by_id(1)
@@ -328,7 +328,7 @@ dump key-value items to json
 
 get recent docs
 
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many( [{'name': 'A'}, {'name': 'B'}, {'name': 'C'}] )
 >>> [a['name'] for a in recent(2)]
@@ -349,7 +349,7 @@ get recent docs
 
 set data by key
 
-```
+```py
 >>> set_key('hoge', 30, file=':memory:') # insert
 >>> get_key('hoge')
 30
@@ -369,7 +369,7 @@ update doc
 
 
 update by id
-```
+```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many([1,2,3,4,5])
 >>> get_by_id(1)
@@ -381,7 +381,7 @@ update by id
 
 
 update by id:
-```
+```py
 >>> clear()
 >>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag_name="name")
 >>> update(id=2, new_value={"name":"B", "age": 10})
@@ -391,7 +391,7 @@ update by id:
 
 
 update by tag:
-```
+```py
 >>> clear()
 >>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag_name="name")
 >>> update(tag="B", new_value={"name":"B", "age": 15})
@@ -405,7 +405,7 @@ update by tag:
 
 update doc value by tag
 
-```
+```py
 >>> clear()
 >>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag_name="name")
 >>> update_by_tag("B", {"name":"B", "age": 15})
@@ -419,7 +419,7 @@ update doc value by tag
 
 update doc value by tag
 
-```
+```py
 >>> clear()
 >>> insert_many([{"name": "A", "age": 30}, {"name": "B", "age": 20}], tag_name="name")
 >>> update_by_tag("B", {"name":"B", "age": 15})

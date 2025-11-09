@@ -29,7 +29,7 @@ def check_doc(doc):
             print('@ len=', len(code_list))
             if len(code_list) > 0:
                 src2 = "\n".join(code_list)
-                res.append('```\n' + src2 + '\n```\n')
+                res.append('```py\n' + src2 + '\n```\n')
                 # print('code:', src2)
                 code_list = []
             res.append(s)
