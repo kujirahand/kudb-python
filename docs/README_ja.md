@@ -173,6 +173,43 @@ kudb.update_by_tag('B', {'name': 'B', 'age': 23})
 print('update.B=23 >', kudb.get(tag='B'))
 ```
 
+## ゲームのハイスコア管理
+
+ゲームのハイスコアを簡単に管理できます。
+
+```sample-highscore.py
+import kudb
+
+# DBに接続
+kudb.connect('game.db')
+kudb.clear()
+
+# スコアデータの登録
+kudb.insert_score(100, "プレイヤーA")
+kudb.insert_score(250, "プレイヤーB")
+kudb.insert_score(180, "プレイヤーC")
+kudb.insert_score(320, "プレイヤーD")
+kudb.insert_score(150, "プレイヤーE")
+
+# ハイスコア上位3位を取得
+for i, row in enumerate(kudb.get_high_score(3), 1):
+    print(f"{i}. {row['name']}: {row['score']}")
+# 出力:
+# 1. プレイヤーD: 320
+# 2. プレイヤーB: 250
+# 3. プレイヤーC: 180
+
+# 追加情報付きでスコアを登録
+kudb.insert_score(400, "プレイヤーF", meta={"level": 5, "time": 120})
+
+# トップスコアを取得
+top_player = kudb.get_high_score(1)[0]
+print(f"トップスコア: {top_player['name']} - {top_player['score']}")
+
+# 閉じる
+kudb.close()
+```
+
 ### キー・バリューストアの使い方
 
 Key-Valueストアとしても利用できます。

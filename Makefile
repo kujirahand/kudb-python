@@ -22,6 +22,8 @@ clean:
 	@echo "Clean complete!"
 
 build: clean
+	@echo "Generating documentation..."
+	python mkdoc.py
 	@echo "Building distribution packages..."
 	python -m build
 	@echo "Build complete! Check dist/ directory"
