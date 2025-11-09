@@ -148,8 +148,9 @@ find doc by lambda
 
 ## find_one(callback: Optional[Callable[[Any], bool]] = None, keys: Optional[Dict[str, Any]] = None, limit: Optional[int] = None) -> Any
 
->> clear(file=MEMORY_FILE)
+find one doc by lambda
 
+>> clear(file=MEMORY_FILE)
 >> insert_many([{'name': 'Taro', 'age': 30}, {'name': 'Jiro', 'age': 18}])
 >> find_one(keys={'name': 'Jiro'})['age']
 18
