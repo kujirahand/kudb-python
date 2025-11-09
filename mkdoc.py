@@ -14,6 +14,7 @@ lines = src.split('\n')
 i = 0
 while i < len(lines):
     line = lines[i]
+    # 関数定義を検出
     m = re.match(r'^def ([A-Za-z0-9_]+)', line)
     if m:
         name = m.group(1)
@@ -55,6 +56,7 @@ def check_doc(doc):
     res[0] += "\n"
     return "\n".join(res)
 
+print('\n=== Generating documentation ===')
 text = '# kudb functions\n\n'
 for name in dir(kudb):
     if re.match('^__', name):
@@ -63,9 +65,10 @@ for name in dir(kudb):
     if name not in def_list:
         continue
     text += '## ' + def_list[name] + '\n\n'
-    f = eval(f'kudb.%s' % name)
+    f = getattr(kudb, name)
     # text += f.__builtins__ + '\n'
-    text += check_doc(f.__doc__) + '\n\n'
+    if hasattr(f, '__doc__') and f.__doc__:
+        text += check_doc(f.__doc__) + '\n\n'
 
 print(text)
 with open('./docs/functions.md', 'w', encoding='utf-8') as fp:

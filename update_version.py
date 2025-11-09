@@ -77,13 +77,40 @@ def update_version(new_version):
         print("\nNo files were updated.")
 
 
+def sync_version():
+    """Sync version from pyproject.toml to __init__.py"""
+    version = read_current_version()
+    if not version:
+        print("Error: Could not read version from pyproject.toml")
+        sys.exit(1)
+    
+    # Update kudb/__init__.py
+    updated = update_file(
+        "kudb/__init__.py",
+        r'__version__ = "[^"]+"',
+        f'__version__ = "{version}"'
+    )
+    
+    if updated:
+        print(f"\n✓ Version synced to {version}")
+    else:
+        print(f"\nVersion already synced: {version}")
+
+
 def main():
     """Main function"""
+    # Check for sync command
+    if len(sys.argv) >= 2 and sys.argv[1] == "sync":
+        sync_version()
+        sys.exit(0)
+    
     if len(sys.argv) < 2:
         current_version = read_current_version()
         print(f"Current version: {current_version}")
-        print("\nUsage: python update_version.py <new_version>")
-        print("Example: python update_version.py 0.2.5")
+        print("\nUsage:")
+        print("  python update_version.py <new_version>  - Update version")
+        print("  python update_version.py sync           - Sync version from pyproject.toml to __init__.py")
+        print("\nExample: python update_version.py 0.2.5")
         sys.exit(1)
     
     new_version = sys.argv[1]

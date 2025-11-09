@@ -220,6 +220,19 @@ get doc by tag
 
 
 
+## get_high_score(limit: int = 10, score_key: str = "score") -> List[Any]
+
+get high score docs
+
+```py
+>>> clear(file=MEMORY_FILE)
+>>> insert_many([{'name': 'A', 'score': 50}, {'name': 'B', 'score': 80}, {'name': 'C', 'score': 70}])
+>>> [a['name'] for a in get_high_score(2)]
+['B', 'C']
+```
+
+
+
 ## get_info(key: str, default: str = "") -> Any
 
 get data and info
@@ -278,6 +291,12 @@ get one doc by id or tag
 
 
 
+## get_tag_name(def_tag_name: str = "tag") -> Any
+
+get tag name
+
+
+
 ## insert(value: Any, file: Optional[str] = None, tag_name: Optional[str] = None, tag: Optional[str] = None) -> Optional[int]
 
 insert doc
@@ -315,6 +334,26 @@ insert many doc
 1
 >>> get_by_id(2)
 2
+```
+
+
+
+## insert_score(score: int, name: str, meta: Optional[Dict[str, Any]] = None, score_key: str = "score", file: Optional[str] = None) -> Optional[int]
+
+insert score doc
+
+```py
+>>> clear(file=MEMORY_FILE)
+>>> insert_score(100, "A")
+1
+>>> insert_score(200, "B")
+2
+>>> get_by_id(1)['name']
+'A'
+>>> get_by_id(2)['name']
+'B'
+>>> get_high_score(2)[0]['name']
+'B'
 ```
 
 
@@ -361,6 +400,12 @@ set data by key
 >>> get_key('hoge')
 35
 ```
+
+
+
+## set_tag_name(tag_name: str) -> None
+
+set tag name
 
 
 

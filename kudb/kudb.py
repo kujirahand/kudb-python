@@ -876,7 +876,26 @@ def insert_score(score: int, name: str, meta: Optional[Dict[str, Any]] = None, s
     meta[score_key] = score
     return insert(meta, file=file)
 
+# 公開APIを定義
+__all__ = [
+    # Constants
+    "MEMORY_FILE", "SQLITE_MAX_INT",
+    # Connection
+    "connect", "change_db", "close",
+    # KVS functions
+    "get_key", "set_key", "delete_key", "get_keys", "get_info", "kvs_json", "clear_keys",
+    # Document functions
+    "count_doc", "get_all", "recent", "get_by_id", "get_by_tag", "get", "get_one",
+    "insert", "insert_many", "update", "update_by_tag", "update_by_id",
+    "delete", "clear_doc", "clear",
+    "find", "find_one",
+    "set_tag_name", "get_tag_name",
+    # Score functions
+    "get_high_score", "insert_score",
+]
+
 if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
+

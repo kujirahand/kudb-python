@@ -3,7 +3,7 @@
 help:
 	@echo "Available commands:"
 	@echo "  make clean        - Remove build artifacts"
-	@echo "  make build        - Build distribution packages"
+	@echo "  make build        - Sync version and build distribution packages"
 	@echo "  make test         - Run tests"
 	@echo "  make version      - Show or update version (usage: make version NEW=0.2.5)"
 	@echo "  make deploy-test  - Deploy to Test PyPI"
@@ -21,11 +21,19 @@ clean:
 	find . -type f -name "*.pyc" -delete
 	@echo "Clean complete!"
 
+doc:
+	@echo "Generating documentation..."
+	python mkdoc.py
+	@echo "Documentation generated!"
+
 build: clean
+	@echo "Syncing version from pyproject.toml to __init__.py..."
+	@python update_version.py sync
 	@echo "Generating documentation..."
 	python mkdoc.py
 	@echo "Building distribution packages..."
 	python -m build
+	@echo "Build complete! Check dist/ directory"
 	@echo "Build complete! Check dist/ directory"
 
 test:
