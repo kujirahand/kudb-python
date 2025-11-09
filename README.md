@@ -191,4 +191,10 @@ print(kudb.get_key('hoge_1st', 'not exists'))
 kudb.close()
 ```
 
+## Type Hints Support
 
+This library now supports type hints (PEP 484). All functions and methods have proper type annotations for better IDE support and static type checking.
+
+### Requirements
+
+- Python 3.6 or higher
