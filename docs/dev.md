@@ -17,7 +17,7 @@ git push && git push --tags
 
 ## 3. デプロイ
 
-```
+```sh
 make deploy
 ```
 
