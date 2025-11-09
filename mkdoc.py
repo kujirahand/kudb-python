@@ -7,14 +7,31 @@ import kudb
 # check 1st
 with open('kudb/kudb.py', encoding='utf-8') as fp:
     src = fp.read()
+
+# 関数定義を抽出(複数行対応)
 def_list = {}
-for line in src.split('\n'):
+lines = src.split('\n')
+i = 0
+while i < len(lines):
+    line = lines[i]
     m = re.match(r'^def ([A-Za-z0-9_]+)', line)
-    if not m:
-        continue
-    name = m.group(1)
-    print(name)
-    def_list[name] = re.sub(r'(^def |:$)', '', line)
+    if m:
+        name = m.group(1)
+        print(name)
+        # 関数定義を完全に取得(複数行対応)
+        func_def = line
+        # 閉じ括弧が見つかるまで次の行を追加
+        if '(' in line and ')' not in line.split('->')[0]:
+            i += 1
+            while i < len(lines):
+                func_def += ' ' + lines[i].strip()
+                # 戻り値の前に閉じ括弧があるか、または行末に閉じ括弧があるかチェック
+                if ')' in lines[i]:
+                    break
+                i += 1
+        # def と末尾のコロンを削除
+        def_list[name] = re.sub(r'(^def |:\s*$)', '', func_def).strip()
+    i += 1
 
 # check doc
 def check_doc(doc):

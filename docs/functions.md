@@ -121,7 +121,7 @@ delete key
 
 
 
-## find(
+## find( callback: Optional[Callable[[Any], bool]] = None, keys: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, ) -> List[Any]
 
 find doc by lambda
 
@@ -155,7 +155,7 @@ find doc by lambda
 18
 
 
-## get(
+## get( id: Optional[int] = None, key: Optional[str] = None, tag: Optional[str] = None, file: Optional[str] = None, ) -> Any
 
 get docs by id or key or tag
 
