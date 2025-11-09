@@ -1,5 +1,16 @@
 from setuptools import setup, find_packages
-from kudb import __version__ # バージョン情報取得のため
+import re
+from pathlib import Path
+
+# Read version from pyproject.toml
+def get_version():
+    pyproject = Path("pyproject.toml")
+    if pyproject.exists():
+        content = pyproject.read_text(encoding='utf-8')
+        match = re.search(r'version = "([^"]+)"', content)
+        if match:
+            return match.group(1)
+    return "0.0.0"
 
 # get readme
 with open("./README.md", encoding='utf-8') as f:
@@ -17,7 +28,7 @@ setup(
     author_email=EMAIL,
     maintainer=AUTHOR,
     maintainer_email=EMAIL,
-    version=__version__,
+    version=get_version(),
     long_description=long_desc,
     long_description_content_type="text/markdown",
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
