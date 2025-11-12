@@ -95,7 +95,7 @@ for row in kudb.recent(2):
     print('recent(2) =>', row) # => Ika, Hirame
 ```
 
-## High Score　Management
+## High-score management
 
 High score management sample:
 
