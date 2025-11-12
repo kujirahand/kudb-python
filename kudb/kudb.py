@@ -34,6 +34,7 @@ import json
 class KudbError(Exception):
     """Kudb Error"""
 
+
 db: Optional[sqlite3.Connection] = None
 cache_db: Dict[str, sqlite3.Connection] = {}
 CACHE_KEYS: Dict[str, bool] = {}
@@ -240,7 +241,7 @@ def delete_key(key: str) -> None:
 def set_keys_from_dict(data: Dict[str, Any], file: Optional[str] = None) -> None:
     """
     set multiple keys from dictionary efficiently
-    
+
     >>> _ = connect()
     >>> clear()
     >>> set_keys_from_dict({'name': 'Taro', 'age': 30, 'city': 'Tokyo'})
@@ -264,15 +265,15 @@ def set_keys_from_dict(data: Dict[str, Any], file: Optional[str] = None) -> None
         raise KudbError("data must be a dictionary in `set_keys_from_dict` method.")
     if len(data) == 0:
         return
-    
+
     try:
         cur = db.cursor()
         current_time = int(time.time())
-        
+
         # Separate keys for insert and update
         insert_data = []
         update_data = []
-        
+
         for key, value in data.items():
             value_json = json.dumps(value, ensure_ascii=False)
             if key in CACHE_KEYS:
@@ -280,15 +281,15 @@ def set_keys_from_dict(data: Dict[str, Any], file: Optional[str] = None) -> None
             else:
                 insert_data.append([key, value_json, current_time, current_time])
                 CACHE_KEYS[key] = True
-        
+
         # Batch insert new keys
         if insert_data:
             cur.executemany(SQLS["insert"], insert_data)
-        
+
         # Batch update existing keys
         if update_data:
             cur.executemany(SQLS["update"], update_data)
-        
+
         cur.close()
         db.commit()
     except Exception as err:
@@ -363,7 +364,12 @@ def count_doc(file: Optional[str] = None) -> int:
         raise KudbError("could not count docs:" + str(err)) from err
 
 
-def get_all(limit: Optional[int] = None, order_asc: bool = True, from_id: Optional[int] = None, file: Optional[str] = None) -> List[Any]:
+def get_all(
+    limit: Optional[int] = None,
+    order_asc: bool = True,
+    from_id: Optional[int] = None,
+    file: Optional[str] = None,
+) -> List[Any]:
     """
     get all doc
     >>> clear(file=MEMORY_FILE)
@@ -464,7 +470,9 @@ def get_by_id(id: int, def_value: Any = None, file: Optional[str] = None) -> Any
     return values
 
 
-def get_by_tag(tag: str, limit: Optional[int] = None, file: Optional[str] = None) -> List[Any]:
+def get_by_tag(
+    tag: str, limit: Optional[int] = None, file: Optional[str] = None
+) -> List[Any]:
     """
     get doc by tag
     >>> clear(file=MEMORY_FILE)
@@ -517,7 +525,9 @@ def get(
     raise KudbError("need id or key in `get` method")
 
 
-def get_one(id: Optional[int] = None, tag: Optional[str] = None, file: Optional[str] = None) -> Any:
+def get_one(
+    id: Optional[int] = None, tag: Optional[str] = None, file: Optional[str] = None
+) -> Any:
     """
     get one doc by id or tag
     >>> clear(file=MEMORY_FILE)
@@ -537,7 +547,12 @@ def get_one(id: Optional[int] = None, tag: Optional[str] = None, file: Optional[
     raise KudbError("need id or tag in `get_one` method")
 
 
-def insert(value: Any, file: Optional[str] = None, tag_name: Optional[str] = None, tag: Optional[str] = None) -> Optional[int]:
+def insert(
+    value: Any,
+    file: Optional[str] = None,
+    tag_name: Optional[str] = None,
+    tag: Optional[str] = None,
+) -> Optional[int]:
     """
     insert doc
     >>> clear(file=MEMORY_FILE)
@@ -594,9 +609,16 @@ def insert(value: Any, file: Optional[str] = None, tag_name: Optional[str] = Non
         raise KudbError("database insert error:" + str(err)) from err
 
 
-def insert_many(value_list: List[Any], file: Optional[str] = None, tag_name: Optional[str] = None) -> None:
+def insert_many(
+    value_list: List[Any],
+    file: Optional[str] = None,
+    tag_name: Optional[str] = None,
+    tag: Optional[str] = None,
+) -> None:
     """
     insert many doc
+    tag: all documents will have the same tag value
+    tag_name: extract tag value from each document's key
     >>> clear(file=MEMORY_FILE)
     >>> insert_many([1,2,3,4,5])
     >>> get_by_id(1)
@@ -613,14 +635,18 @@ def insert_many(value_list: List[Any], file: Optional[str] = None, tag_name: Opt
     # make many values
     t = int(time.time())
     # check tag
-    if tag_name is None:
-        tag_name = get_tag_name()
-    else:
-        set_tag_name(tag_name)
+    if tag is None:
+        if tag_name is None:
+            tag_name = get_tag_name()
+        else:
+            set_tag_name(tag_name)
     rows = []
     for val in value_list:
         tag_value = ""
-        if isinstance(val, dict):
+        if tag is not None:
+            # use tag argument for all documents
+            tag_value = tag
+        elif isinstance(val, dict):
             if tag_name in val:
                 tag_value = val[tag_name]
         rows.append([json.dumps(val, ensure_ascii=False), tag_value, t, t])
@@ -634,7 +660,9 @@ def insert_many(value_list: List[Any], file: Optional[str] = None, tag_name: Opt
         raise KudbError("database insert error:" + str(err)) from err
 
 
-def update(id: Optional[int] = None, new_value: Any = None, tag: Optional[str] = None) -> None:
+def update(
+    id: Optional[int] = None, new_value: Any = None, tag: Optional[str] = None
+) -> None:
     """
     update doc
 
@@ -730,7 +758,13 @@ def update_by_id(id: int, new_value: Any) -> None:
     update(id=id, new_value=new_value)
 
 
-def delete(id: Optional[int] = None, key: Optional[str] = None, tag: Optional[str] = None, doc_keys: Optional[Dict[str, Any]] = None, file: Optional[str] = None) -> None:
+def delete(
+    id: Optional[int] = None,
+    key: Optional[str] = None,
+    tag: Optional[str] = None,
+    doc_keys: Optional[Dict[str, Any]] = None,
+    file: Optional[str] = None,
+) -> None:
     """
     delete by id or key
     >>> clear(file=MEMORY_FILE)
@@ -878,7 +912,11 @@ def find(
     return result
 
 
-def find_one(callback: Optional[Callable[[Any], bool]] = None, keys: Optional[Dict[str, Any]] = None, limit: Optional[int] = None) -> Any:
+def find_one(
+    callback: Optional[Callable[[Any], bool]] = None,
+    keys: Optional[Dict[str, Any]] = None,
+    limit: Optional[int] = None,
+) -> Any:
     """
     find one doc by lambda
     >> clear(file=MEMORY_FILE)
@@ -901,6 +939,7 @@ def get_tag_name(def_tag_name: str = "tag") -> Any:
     """get tag name"""
     return get_key("_tag", def_tag_name)
 
+
 def get_high_score(limit: int = 10, score_key: str = "score") -> List[Any]:
     """
     get high score docs
@@ -913,7 +952,14 @@ def get_high_score(limit: int = 10, score_key: str = "score") -> List[Any]:
     result.sort(key=lambda x: x.get(score_key, 0), reverse=True)
     return result[:limit]
 
-def insert_score(score: int, name: str, meta: Optional[Dict[str, Any]] = None, score_key: str = "score", file: Optional[str] = None) -> Optional[int]:
+
+def insert_score(
+    score: int,
+    name: str,
+    meta: Optional[Dict[str, Any]] = None,
+    score_key: str = "score",
+    file: Optional[str] = None,
+) -> Optional[int]:
     """
     insert score doc
     >>> clear(file=MEMORY_FILE)
@@ -934,26 +980,51 @@ def insert_score(score: int, name: str, meta: Optional[Dict[str, Any]] = None, s
     meta[score_key] = score
     return insert(meta, file=file)
 
+
 # 公開APIを定義
 __all__ = [
     # Constants
-    "MEMORY_FILE", "SQLITE_MAX_INT",
+    "MEMORY_FILE",
+    "SQLITE_MAX_INT",
     # Connection
-    "connect", "change_db", "close",
+    "connect",
+    "change_db",
+    "close",
     # KVS functions
-    "get_key", "set_key", "set_keys_from_dict", "delete_key", "get_keys", "get_info", "kvs_json", "clear_keys",
+    "get_key",
+    "set_key",
+    "set_keys_from_dict",
+    "delete_key",
+    "get_keys",
+    "get_info",
+    "kvs_json",
+    "clear_keys",
     # Document functions
-    "count_doc", "get_all", "recent", "get_by_id", "get_by_tag", "get", "get_one",
-    "insert", "insert_many", "update", "update_by_tag", "update_by_id",
-    "delete", "clear_doc", "clear",
-    "find", "find_one",
-    "set_tag_name", "get_tag_name",
+    "count_doc",
+    "get_all",
+    "recent",
+    "get_by_id",
+    "get_by_tag",
+    "get",
+    "get_one",
+    "insert",
+    "insert_many",
+    "update",
+    "update_by_tag",
+    "update_by_id",
+    "delete",
+    "clear_doc",
+    "clear",
+    "find",
+    "find_one",
+    "set_tag_name",
+    "get_tag_name",
     # Score functions
-    "get_high_score", "insert_score",
+    "get_high_score",
+    "insert_score",
 ]
 
 if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
-
