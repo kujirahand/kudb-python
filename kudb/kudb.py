@@ -237,6 +237,64 @@ def delete_key(key: str) -> None:
         raise KudbError("database could not delete key: " + str(err)) from err
 
 
+def set_keys_from_dict(data: Dict[str, Any], file: Optional[str] = None) -> None:
+    """
+    set multiple keys from dictionary efficiently
+    
+    >>> _ = connect()
+    >>> clear()
+    >>> set_keys_from_dict({'name': 'Taro', 'age': 30, 'city': 'Tokyo'})
+    >>> get_key('name')
+    'Taro'
+    >>> get_key('age')
+    30
+    >>> get_key('city')
+    'Tokyo'
+    >>> set_keys_from_dict({'name': 'Jiro', 'score': 100})  # update and insert
+    >>> get_key('name')
+    'Jiro'
+    >>> get_key('score')
+    100
+    """
+    if file is not None:
+        connect(file)
+    if db is None:
+        raise KudbError("please connect before using `set_keys_from_dict` method.")
+    if not isinstance(data, dict):
+        raise KudbError("data must be a dictionary in `set_keys_from_dict` method.")
+    if len(data) == 0:
+        return
+    
+    try:
+        cur = db.cursor()
+        current_time = int(time.time())
+        
+        # Separate keys for insert and update
+        insert_data = []
+        update_data = []
+        
+        for key, value in data.items():
+            value_json = json.dumps(value, ensure_ascii=False)
+            if key in CACHE_KEYS:
+                update_data.append([value_json, current_time, key])
+            else:
+                insert_data.append([key, value_json, current_time, current_time])
+                CACHE_KEYS[key] = True
+        
+        # Batch insert new keys
+        if insert_data:
+            cur.executemany(SQLS["insert"], insert_data)
+        
+        # Batch update existing keys
+        if update_data:
+            cur.executemany(SQLS["update"], update_data)
+        
+        cur.close()
+        db.commit()
+    except Exception as err:
+        raise KudbError("database could not write keys: " + str(err)) from err
+
+
 def get_keys(clear_cache: bool = True) -> Any:
     """
     get keys
@@ -883,7 +941,7 @@ __all__ = [
     # Connection
     "connect", "change_db", "close",
     # KVS functions
-    "get_key", "set_key", "delete_key", "get_keys", "get_info", "kvs_json", "clear_keys",
+    "get_key", "set_key", "set_keys_from_dict", "delete_key", "get_keys", "get_info", "kvs_json", "clear_keys",
     # Document functions
     "count_doc", "get_all", "recent", "get_by_id", "get_by_tag", "get", "get_one",
     "insert", "insert_many", "update", "update_by_tag", "update_by_id",
