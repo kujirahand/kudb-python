@@ -72,7 +72,7 @@ count doc
 
 
 
-## delete(id: Optional[int] = None, key: Optional[str] = None, tag: Optional[str] = None, doc_keys: Optional[Dict[str, Any]] = None, file: Optional[str] = None) -> None
+## delete( id: Optional[int] = None, key: Optional[str] = None, tag: Optional[str] = None, doc_keys: Optional[Dict[str, Any]] = None, file: Optional[str] = None, ) -> None
 
 delete by id or key
 
@@ -146,7 +146,7 @@ find doc by lambda
 
 
 
-## find_one(callback: Optional[Callable[[Any], bool]] = None, keys: Optional[Dict[str, Any]] = None, limit: Optional[int] = None) -> Any
+## find_one( callback: Optional[Callable[[Any], bool]] = None, keys: Optional[Dict[str, Any]] = None, limit: Optional[int] = None, ) -> Any
 
 find one doc by lambda
 
@@ -171,7 +171,7 @@ get docs by id or key or tag
 
 
 
-## get_all(limit: Optional[int] = None, order_asc: bool = True, from_id: Optional[int] = None, file: Optional[str] = None) -> List[Any]
+## get_all( limit: Optional[int] = None, order_asc: bool = True, from_id: Optional[int] = None, file: Optional[str] = None, ) -> List[Any]
 
 get all doc
 
@@ -207,7 +207,7 @@ get doc by id
 
 
 
-## get_by_tag(tag: str, limit: Optional[int] = None, file: Optional[str] = None) -> List[Any]
+## get_by_tag( tag: str, limit: Optional[int] = None, file: Optional[str] = None ) -> List[Any]
 
 get doc by tag
 
@@ -278,7 +278,7 @@ get keys
 
 
 
-## get_one(id: Optional[int] = None, tag: Optional[str] = None, file: Optional[str] = None) -> Any
+## get_one( id: Optional[int] = None, tag: Optional[str] = None, file: Optional[str] = None ) -> Any
 
 get one doc by id or tag
 
@@ -297,7 +297,7 @@ get tag name
 
 
 
-## insert(value: Any, file: Optional[str] = None, tag_name: Optional[str] = None, tag: Optional[str] = None) -> Optional[int]
+## insert( value: Any, file: Optional[str] = None, tag_name: Optional[str] = None, tag: Optional[str] = None, ) -> Optional[int]
 
 insert doc
 
@@ -323,10 +323,12 @@ insert doc with tag
 
 
 
-## insert_many(value_list: List[Any], file: Optional[str] = None, tag_name: Optional[str] = None) -> None
+## insert_many( value_list: List[Any], file: Optional[str] = None, tag_name: Optional[str] = None, tag: Optional[str] = None, ) -> None
 
 insert many doc
 
+tag: all documents will have the same tag value
+tag_name: extract tag value from each document's key
 ```py
 >>> clear(file=MEMORY_FILE)
 >>> insert_many([1,2,3,4,5])
@@ -338,7 +340,7 @@ insert many doc
 
 
 
-## insert_score(score: int, name: str, meta: Optional[Dict[str, Any]] = None, score_key: str = "score", file: Optional[str] = None) -> Optional[int]
+## insert_score( score: int, name: str, meta: Optional[Dict[str, Any]] = None, score_key: str = "score", file: Optional[str] = None, ) -> Optional[int]
 
 insert score doc
 
@@ -403,13 +405,37 @@ set data by key
 
 
 
+## set_keys_from_dict(data: Dict[str, Any], file: Optional[str] = None) -> None
+
+set multiple keys from dictionary efficiently
+
+
+```py
+>>> _ = connect()
+>>> clear()
+>>> set_keys_from_dict({'name': 'Taro', 'age': 30, 'city': 'Tokyo'})
+>>> get_key('name')
+'Taro'
+>>> get_key('age')
+30
+>>> get_key('city')
+'Tokyo'
+>>> set_keys_from_dict({'name': 'Jiro', 'score': 100})  # update and insert
+>>> get_key('name')
+'Jiro'
+>>> get_key('score')
+100
+```
+
+
+
 ## set_tag_name(tag_name: str) -> None
 
 set tag name
 
 
 
-## update(id: Optional[int] = None, new_value: Any = None, tag: Optional[str] = None) -> None
+## update( id: Optional[int] = None, new_value: Any = None, tag: Optional[str] = None ) -> None
 
 update doc
 
