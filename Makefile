@@ -38,6 +38,7 @@ build: clean
 
 test:
 	@echo "Running doctests..."
+	pytest
 	python -m doctest kudb/kudb.py -v
 	@echo "Tests complete!"
 
